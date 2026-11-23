@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="探索学科之间的关系，记录跨学科学习进度与思考。">
+  <meta name="theme-color" content="#f5f6f8">
+  <title>学科地图</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./content.js"></script>
+  <link rel="stylesheet" href="./course.css">
+  <script defer src="./curriculum.js"></script>
+  <script defer src="./stats-lessons.js"></script>
+  <script defer src="./course.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到内容</a>
+  <header class="top">
+    <div class="top-inner">
+      <a class="wordmark" href="#map" aria-label="学科地图首页"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>学科地图</a>
+      <nav aria-label="学习地图导航">
+        <a href="#map" data-view="map">学科地图</a>
+        <a href="#route" data-view="route">学习路线</a>
+        <a href="#course/stats/overview" data-view="course">课程</a>
+        <a href="#ai" data-view="ai">AI 协作</a>
+        <a href="#notes" data-view="notes">学习记录</a>
+      </nav>
+    </div>
+  </header>
+  <main class="shell" id="main" tabindex="-1">
+    <section id="page-map" aria-labelledby="map-heading">
+      <div class="intro">
+        <div><h1 id="map-heading">跨学科学习地图</h1><p>用不同学科的方法观察同一个问题，记录你的发现与进度。</p></div>
+        <div class="progress-overview" id="overview" aria-label="总体学习进度"></div>
+      </div>
+      <section class="workspace" aria-label="互动学科地图">
+        <div class="canvas-panel">
+          <div class="map-toolbar">
+            <label class="search-box"><span class="magnifier" aria-hidden="true"></span><input id="map-search" type="search" placeholder="搜索学科或方法" aria-label="搜索学科或方法"></label>
+            <button type="button" id="link-toggle" class="soft" aria-pressed="true"><span class="toggle-dot" aria-hidden="true"></span>学科连线</button>
+          </div>
+          <div class="graph" id="graph">
+            <canvas id="lines" aria-hidden="true"></canvas>
+            <div class="graph-center" aria-hidden="true"><span class="center-mark">＋</span><strong>同一个问题</strong><span>不同的解释</span></div>
+            <div id="groups" class="groups"></div>
+          </div>
+          <p id="map-status" class="map-caption" aria-live="polite"></p>
+        </div>
+        <aside class="detail" aria-label="学科详情" id="detail"></aside>
+      </section>
+      <details class="source-list"><summary>学科分类与课程参考</summary><ul id="map-sources"></ul></details>
+    </section>
+    <section id="page-route" class="secondary-view" aria-labelledby="route-heading" hidden>
+      <div class="intro"><div><h1 id="route-heading">学习路线</h1><p>先做一门的试学任务，再根据你的练习表现调整顺序。</p></div></div>
+      <div id="route-content"></div>
+    </section>
+    <section id="page-course" class="secondary-view" aria-labelledby="course-heading" hidden></section>
+    <section id="page-ai" class="secondary-view" aria-labelledby="ai-heading" hidden>
+      <div class="intro"><div><h1 id="ai-heading">和 AI 一起学</h1><p>选择合适的协作任务，为关键结论保留核验步骤。</p></div></div>
+      <div id="ai-content"></div>
+    </section>
+    <section id="page-notes" class="secondary-view" aria-labelledby="notes-heading" hidden>
+      <div class="intro"><div><h1 id="notes-heading">学习记录</h1><p>把原始观察、假设、证据和下一步留下来。</p></div><button id="new-note" class="primary" type="button">新建记录</button></div>
+      <div class="note-toolbar"><label class="search-box"><span class="magnifier" aria-hidden="true"></span><input id="note-search" type="search" placeholder="搜索记录" aria-label="搜索记录"></label><div class="backup"><button id="export" class="soft" type="button">导出备份</button><button id="import" class="soft" type="button">导入备份</button><input id="backup-file" type="file" accept=".json,application/json" hidden></div></div>
+      <p class="storage-hint">进度、笔记和课程答题记录保存在当前浏览器。换设备或清理浏览器数据前，请导出备份。</p>
+      <div class="note-layout"><div id="note-list" aria-label="学习记录列表"></div><div id="note-editor" aria-label="学习记录编辑器"></div></div>
+    </section>
+    <p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+  </main>
+</body>
+</html>
