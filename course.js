@@ -4,7 +4,12 @@ window.Course = (() => {
   const lessons = window.STATS_LESSONS;
   const transfer = window.STATS_TRANSFER;
   const practice = lessons.flatMap(item => item.exercises);
-  const tasks = new Map([...practice, transfer, ...syllabus.diagnostics].map(task => [task.id, task]));
+  const quickTasks = window.STATS_QUICK.map(unit => ({
+    ...unit.transfer, id:'quick-' + unit.id, title:'独立迁移 · ' + unit.title,
+    misstep:unit.transfer.misstep || unit.limit
+  }));
+  const benchmarkTasks = Object.entries(window.STATS_MAP.benchmark).map(([kind,task]) => ({...task,id:'benchmark-' + kind}));
+  const tasks = new Map([...practice, transfer, ...syllabus.diagnostics, ...quickTasks, ...benchmarkTasks].map(task => [task.id, task]));
   const lessonIds = new Set(lessons.map(lesson => lesson.id));
   const knownVariants = new Set(['main', 'retry']);
   const cleanText = (value, limit) => typeof value === 'string' ? value.slice(0, limit) : '';
@@ -102,7 +107,7 @@ window.Course = (() => {
   function configure(target, callbacks) { el = target; adapter = callbacks; }
   function render(id = 'stats', requested = 'overview') {
     disciplineId = window.ATLAS.disciplines.some(d => d.id === id) ? id : 'stats';
-    step = disciplineId === 'stats' && (lessonIds.has(requested) || ['overview','transfer'].includes(requested)) ? requested : 'overview';
+    step = disciplineId === 'stats' && (lessonIds.has(requested) || ['series','transfer'].includes(requested)) ? requested : 'series';
     const d = window.ATLAS.disciplines.find(item => item.id === disciplineId);
     const title = disciplineId === 'stats' ? '统计与因果推断' : d.name;
     el.innerHTML = '<div class="intro"><div><a class="plan-link" href="#map">学科地图</a><h1 id="course-heading">' + escapeHTML(title) +
@@ -114,9 +119,11 @@ window.Course = (() => {
   }
   const body = () => el.querySelector('#course-body');
   function renderSidebar() {
+    const sidebar = el.querySelector('#course-sidebar');
+    if (!sidebar) return;
     const current = summary(model());
-    const nav = [{id:'overview', title:'课程目录'}, ...lessons.map(lesson => ({...lesson, done:lesson.exercises.every(task => passed(model(),task))})), {id:'transfer',title:'陌生情境验收',done:current.transferPassed}];
-    el.querySelector('#course-sidebar').innerHTML = '<h2>从观察到因果</h2><p class="course-meta">3 节课 · 6 道练习</p><nav class="course-nav" aria-label="统计课程目录">' +
+    const nav = [{id:'series', title:'原有课程与项目'}, ...lessons.map(lesson => ({...lesson, done:lesson.exercises.every(task => passed(model(),task))})), {id:'transfer',title:'陌生情境验收',done:current.transferPassed}];
+    sidebar.innerHTML = '<h2>从观察到因果</h2><p class="course-meta">3 节课 · 6 道练习</p><nav class="course-nav" aria-label="统计课程目录">' +
       nav.map(item => '<a href="' + courseURL('stats',item.id) + '"' + (step === item.id ? ' aria-current="step"' : '') + '>' +
         '<span>' + escapeHTML(item.title) + '</span>' + (item.done ? '<small>已通过</small>' : '') + '</a>').join('') +
       '</nav><div class="course-progress"><span>练习达标 ' + current.complete + ' / ' + current.total + '</span><progress max="' + current.total + '" value="' + current.complete +
@@ -126,12 +133,12 @@ window.Course = (() => {
     const current = summary(model());
     body().innerHTML = '<article class="course-card"><span class="course-badge">' + (current.cleared ? '首模块已通过自评' : '首模块已开放') +
       '</span><h2>观察到的差异，什么时候可以归因</h2><p>先做 3 节课，再到陌生案例独立作答。每次提交会保留原文，逐条自评会给出对应的复练建议。</p><div class="course-links">' +
-      '<a class="primary" href="' + courseURL('stats',current.cleared ? lessons[0].id : current.next) + '">' + (current.started ? (current.cleared ? '回看首节课' : '继续学习') : '开始第一课') +
+      '<a class="primary" href="' + courseURL('stats',current.cleared ? lessons[0].id : current.next) + '">' + (current.started ? (current.cleared ? '回看首节课' : '继续学习') : '开始原有第一课') +
       '</a><button class="soft" id="copy-study" type="button">下载学习记录</button></div></article>' +
-      '<div class="standard-grid"><article class="course-card"><h2>大一核心能力参照</h2><p>' + escapeHTML(syllabus.yearSummary) +
+      '<div class="standard-grid"><article class="course-card"><h2>统计基础课程参照</h2><p>' + escapeHTML(syllabus.yearSummary) +
       '</p></article><article class="course-card"><h2>入行一年实务参照</h2><p>' + escapeHTML(syllabus.industrySummary) +
-      '</p></article></div><article class="course-card"><h2>完整学习路线</h2><p>' + escapeHTML(syllabus.workload) +
-      '。建议用每个模块的作业与真实交付检验进度。整年核心目标还要核验大纲的覆盖、独立作业与迁移表现，并据此补课。</p>' +
+      '</p></article></div><article class="course-card"><h2>原有课程路线与企鹅项目</h2><p>' + escapeHTML(syllabus.workload) +
+      '。建议用每个模块的作业与真实交付检验进度。更深入的目标可在完整能力地图与专业验收中查看。</p><div class="course-links"><a class="soft" href="#course/stats/map">查看完整能力地图</a><a class="soft" href="#course/stats/benchmarks">查看专业验收</a></div>' +
       '<ul class="stage-key"><li><strong>试学</strong> · 三节课的六道练习和独立迁移。</li><li><strong>已打基础</strong> · 独立通过数学、数据与概率模块的验收。</li><li><strong>已通过目标深度验收</strong> · 再通过推断、回归、综合项目和陌生题，复核课程覆盖。</li></ul>' +
       '<ol class="module-grid">' + syllabus.modules.map(module => '<li class="module-item"><h3>' + escapeHTML(module.title) +
         '</h3><span class="course-meta">' + module.hours + ' 小时 · ' + (module.id === 'causal' ? '可学习' : '课程规划') +
@@ -156,7 +163,7 @@ window.Course = (() => {
   function renderBody() {
     if (disciplineId !== 'stats') { planned(); return; }
     renderSidebar();
-    if (step === 'overview') { overview(); return; }
+    if (step === 'series') { overview(); return; }
     if (step === 'transfer') {
       const current = summary(model());
       body().innerHTML = '<article class="course-card"><span class="course-badge">独立验收</span><h2>陌生情境迁移</h2><p>用同一套方法分析公共服务问题。写出判断、证据、条件和会让你改变决定的新信息。第一次提交后可打开解析与评分依据。</p><p class="course-meta">' +
@@ -290,7 +297,7 @@ window.Course = (() => {
   }
   function downloadReport() {
     const current = summary(model());
-    const lines = ['# 学科地图学习记录','','统计练习 · ' + current.complete + '/' + current.total,'独立迁移 · ' + (current.transferPassed ? '已通过自评' : '待通过'),''];
+    const lines = ['# 学科地图学习记录','','原有统计练习 · ' + current.complete + '/' + current.total,'原有独立迁移 · ' + (current.transferPassed ? '已通过自评' : '待通过'),'',...(adapter.extraReport?.() ?? [])];
     for (const [key, items] of Object.entries(model().attempts)) {
       const [id, variant] = key.split(':');
       const task = tasks.get(id);
@@ -308,7 +315,16 @@ window.Course = (() => {
     link.click();
     setTimeout(() => URL.revokeObjectURL(href),1000);
   }
-  return {configure, render, normalize, merge, summary, isDiagnostic, courseURL, diagnosticPassed:(value,id) => {
+  function exercise(id, options) {
+    const task = tasks.get(id);
+    if (!task) throw new Error('Unknown course task ' + id);
+    return createExercise(task,options);
+  }
+  function hasPassed(value,id,independent = false) {
+    const task = tasks.get(id);
+    return !!task && passed(value,task,independent);
+  }
+  return {configure, render, normalize, merge, summary, isDiagnostic, courseURL, exercise, hasPassed, downloadReport, diagnosticPassed:(value,id) => {
     const task = syllabus.diagnostics.find(t => t.id === id);
     return !!task && passed(value,task,true);
   }};

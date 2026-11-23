@@ -9,10 +9,14 @@
   <link rel="stylesheet" href="./style.css">
   <script defer src="./content.js"></script>
   <link rel="stylesheet" href="./course.css">
+  <link rel="stylesheet" href="./stats-experience.css?v=stats-capabilities-1">
   <script defer src="./curriculum.js"></script>
   <script defer src="./stats-lessons.js"></script>
-  <script defer src="./course.js"></script>
-  <script defer src="./app.js"></script>
+  <script defer src="./stats-map.js?v=stats-capabilities-1"></script>
+  <script defer src="./stats-quick.js?v=stats-capabilities-1"></script>
+  <script defer src="./course.js?v=stats-capabilities-1"></script>
+  <script defer src="./stats-experience.js?v=stats-capabilities-1"></script>
+  <script defer src="./app.js?v=stats-capabilities-1"></script>
 </head>
 <body>
   <a class="skip" href="#main">跳到内容</a>
@@ -34,6 +38,7 @@
         <div><h1 id="map-heading">跨学科学习地图</h1><p>用不同学科的方法观察同一个问题，记录你的发现与进度。</p></div>
         <div class="progress-overview" id="overview" aria-label="总体学习进度"></div>
       </div>
+      <div id="stats-home"></div>
       <section class="workspace" aria-label="互动学科地图">
         <div class="canvas-panel">
           <div class="map-toolbar">
@@ -52,7 +57,7 @@
       <details class="source-list"><summary>学科分类与课程参考</summary><ul id="map-sources"></ul></details>
     </section>
     <section id="page-route" class="secondary-view" aria-labelledby="route-heading" hidden>
-      <div class="intro"><div><h1 id="route-heading">学习路线</h1><p>先做一门的试学任务，再根据你的练习表现调整顺序。</p></div></div>
+      <div class="intro"><div><h1 id="route-heading">学习路线</h1><p>先完成一次快速体验，再按能力全图挑下一项。</p></div></div>
       <div id="route-content"></div>
     </section>
     <section id="page-course" class="secondary-view" aria-labelledby="course-heading" hidden></section>

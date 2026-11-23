@@ -6,7 +6,7 @@ const disciplines = new Map(data.disciplines.map(d => [d.id, d]));
 const categories = new Map(data.categories.map(c => [c.id, c]));
 const stages = ['未开始', '试学', '已打基础', '已通过目标深度验收'];
 const notesKey = 'discipline-atlas-v1';
-const empty = () => ({version: 1, active: 'stats', progress: {}, notes: [], learning: Course.normalize()});
+const empty = () => ({version: 1, active: 'stats', progress: {}, notes: [], learning: Course.normalize(), quick: StatsExperience.normalize()});
 let state = empty();
 let storageIssue = false;
 try {
@@ -20,6 +20,7 @@ function normalize(input) {
   if (!input || input.version !== 1 || !Array.isArray(input.notes) || typeof input.progress !== 'object' || !input.progress) throw new TypeError('无效的备份格式');
   const clean = empty();
   clean.learning = Course.normalize(input.learning);
+  clean.quick = StatsExperience.normalize(input.quick);
   clean.active = disciplines.has(input.active) ? input.active : clean.active;
   for (const [id, record] of Object.entries(input.progress)) {
     if (disciplines.has(id) && Number.isInteger(record?.stage) && record.stage >= 0 && record.stage < stages.length) {
@@ -66,19 +67,17 @@ const nodes = new Map();
 let showLinks = true;
 let showCurrentNode = true;
 const stageFor = id => {
-  if (id === 'stats') return Course.summary(state.learning).started ? 1 : 0;
+  if (id === 'stats') return Course.summary(state.learning).started || StatsExperience.hasStarted(state.quick) ? 1 : 0;
   return Course.diagnosticPassed(state.learning,id) ? 1 : 0;
 };
 function courseInfo(id) {
   const legacy = (state.progress[id]?.stage ?? 0) > 0
     ? '<p class="course-meta">旧版自记进度：' + escapeHTML(stages[state.progress[id].stage]) + '</p>' : '';
   if (id === 'stats') {
-    const current = Course.summary(state.learning);
-    return '<div class="node-course-info"><span class="stage-pill">' +
-      (current.cleared ? '首模块已通过自评' : stages[stageFor(id)]) + '</span><p>' +
-      (current.cleared ? '下一步 · 查看基础路线' : '下一课 · ' + escapeHTML(current.nextTitle)) + '</p>' + legacy +
-      '<div class="course-links"><a class="primary course-entry" href="' + Course.courseURL(id) + '">课程目录</a>' +
-      '<a class="text-button" href="' + Course.courseURL(id,current.next) + '">' + (current.started ? '继续学习' : '开始第一课') + '</a></div></div>';
+    return '<div class="node-course-info"><span class="stage-pill">' + stages[stageFor(id)] +
+      '</span><p>从生活里的三个判断开始，再沿全图深入。</p>' + legacy +
+      '<div class="course-links"><a class="primary course-entry" href="' + Course.courseURL(id) + '">统计课程</a>' +
+      '<a class="text-button" href="' + StatsExperience.url('map') + '">查看完整能力地图</a></div></div>';
   }
   const hasTest = Course.isDiagnostic(id);
   const next = hasTest ? (Course.diagnosticPassed(state.learning,id) ? '自测已通过 · 下一步可做实作' : '下一步 · 独立自测') : '下一步 · 起点自测待开放';
@@ -127,6 +126,7 @@ function renderOverview() {
   const started = data.disciplines.filter(d => stageFor(d.id) > 0).length;
   const completed = data.disciplines.filter(d => stageFor(d.id) === 3).length;
   const count = data.disciplines.length;
+  byId('stats-home').innerHTML = StatsExperience.entry(state.quick,state.learning,true);
   byId('overview').innerHTML = '<div class="progress-label"><span>已开始</span><strong>' + started + ' / ' + count + ' 门</strong></div><progress aria-label="已开始的学科" max="' + count + '" value="' + started + '"></progress><div class="progress-label"><span>达到目标深度</span><strong>' + completed + ' 门</strong></div>';
 }
 function linkedTo(id) {
@@ -225,15 +225,16 @@ function drawGraph() {
 }
 function renderRoute() {
   const section = byId('route-content');
-  section.innerHTML = '<div class="roadmap-grid">' + data.roadmap.map((item, i) =>
+  section.innerHTML = StatsExperience.entry(state.quick,state.learning,true) +
+    '<details class="stats-scope"><summary>原有路线和企鹅数据项目</summary><div class="roadmap-grid">' + data.roadmap.map((item, i) =>
     '<article class="card' + (i === 0 ? ' highlight' : '') + '"><h3>' + escapeHTML(item.title) + '</h3><p class="timing">' + escapeHTML(item.timing) + '</p><p>' + escapeHTML(item.description) + '</p><ul>' + item.items.map(text => '<li>' + escapeHTML(text) + '</li>').join('') + '</ul>' +
-    (i === 0 ? '<p><button type="button" class="soft" id="start-trial">开始统计课程</button></p>' : '') + '</article>').join('') + '</div>' +
+    (i === 0 ? '<p><button type="button" class="soft" id="start-trial">查看原有课程与项目</button></p>' : '') + '</article>').join('') + '</div></details>' +
     '<h2 class="section-title">起点校准</h2><div class="card-stack">' + data.diagnostic.map(entry =>
       '<article class="card"><h3>' + escapeHTML(entry.title) + '</h3><p>' + escapeHTML(entry.question) + '</p></article>').join('') + '</div>' +
     '<h2 class="section-title">迁移练习 · AI 功能复访偏低</h2><div class="card-stack">' + data.cases.map(entry =>
       '<article class="card"><h3>' + escapeHTML(entry.title) + '</h3><p>' + escapeHTML(entry.description) + '</p></article>').join('') +
     '<article class="card"><h3>提交自己的判断</h3><p>先独立写下你的解释、区分解释的证据和决策。然后让 AI 指出最薄弱的一条假设，最后独立完成一道陌生案例。</p><p><button type="button" class="soft" id="case-note">记下我的判断</button></p></article></div>';
-  byId('start-trial').addEventListener('click', () => { location.hash = Course.courseURL('stats'); });
+  byId('start-trial').addEventListener('click', () => { location.hash = Course.courseURL('stats','series'); });
   byId('case-note').addEventListener('click', () => newNote('stats', 'AI 功能复访练习', '假设'));
 }
 const aiTasks = [
@@ -321,8 +322,8 @@ function renderNotes() {
 function noteId() {
   return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 }
-function newNote(discipline = '', title = '', type = '观察') {
-  const note = {id: noteId(), title, discipline, type, body: '', source: '', updated: new Date().toISOString()};
+function newNote(discipline = '', title = '', type = '观察', source = '') {
+  const note = {id: noteId(), title, discipline, type, body: '', source, updated: new Date().toISOString()};
   state.notes.push(note);
   selectedNote = note.id;
   byId('note-search').value = '';
@@ -363,6 +364,7 @@ function initNotes() {
         if (!state.progress[id] || progress.updated > state.progress[id].updated) state.progress[id] = progress;
       }
       state.learning = Course.merge(state.learning,incoming.learning);
+      state.quick = StatsExperience.merge(state.quick,incoming.quick);
       saveWithNotice('已合并笔记、进度和答题记录');
       renderNotes();
       renderOverview();
@@ -379,7 +381,7 @@ function signature(note) {
 function switchView() {
   const views = ['map', 'route', 'course', 'ai', 'notes'];
   const hash = location.hash.slice(1);
-  const [page, discipline, step] = hash.split('/');
+  const [page, discipline, step, item] = hash.split('/');
   const active = views.includes(page) ? page : 'map';
   for (const view of views) byId('page-' + view).hidden = view !== active;
   document.querySelectorAll('nav [data-view]').forEach(link => {
@@ -390,19 +392,35 @@ function switchView() {
     renderNotes();
     if (selectedNote && !document.activeElement?.closest('.note-form')) byId('note-title')?.focus({preventScroll:true});
   }
-  if (active === 'course') Course.render(discipline,step);
-  if (active === 'map') scheduleGraph();
   if (hash !== 'main') window.scrollTo(0,0);
+  if (active === 'course') {
+    if ((!discipline || discipline === 'stats') && (!step || StatsExperience.views.includes(step))) {
+      StatsExperience.render(step ?? 'overview',item);
+    } else {
+      Course.render(discipline,step);
+    }
+  }
+  if (active === 'route') renderRoute();
+  if (active === 'map') scheduleGraph();
+}
+function commitLearning(message) {
+  saveWithNotice(message);
+  renderOverview();
+  renderNodes();
+  renderDetail();
+  StatsExperience.updateProgress();
 }
 Course.configure(byId('page-course'),{
   model:() => state.learning,
+  extraReport:() => StatsExperience.report(state.quick),
   save,
-  commit(message) {
-    saveWithNotice(message);
-    renderOverview();
-    renderNodes();
-    renderDetail();
-  }
+  commit:commitLearning
+});
+StatsExperience.configure(byId('page-course'),{
+  model:() => state.quick,
+  learning:() => state.learning,
+  commit:commitLearning,
+  note:(title,href) => newNote('stats','生活应用 · ' + title,'下一步',new URL(href,location.href).href)
 });
 initMap();
 initNotes();
