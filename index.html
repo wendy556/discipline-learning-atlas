@@ -10,7 +10,9 @@
   <script defer src="./content.js"></script>
   <link rel="stylesheet" href="./course.css">
   <link rel="stylesheet" href="./stats-experience.css?v=philosophy-editorial-1">
-  <link rel="stylesheet" href="./editorial.css?v=philosophy-editorial-1">
+  <link rel="stylesheet" href="./editorial.css?v=course-workspace-1">
+  <link rel="stylesheet" href="./atlas-course.css?v=course-workspace-1">
+  <link rel="stylesheet" href="./atlas-home.css?v=course-workspace-1">
   <script defer src="./curriculum.js"></script>
   <script defer src="./stats-lessons.js"></script>
   <script defer src="./stats-map.js?v=philosophy-editorial-1"></script>
@@ -18,8 +20,8 @@
   <script defer src="./philosophy-map.js?v=philosophy-editorial-1"></script>
   <script defer src="./philosophy-quick.js?v=philosophy-editorial-1"></script>
   <script defer src="./course.js?v=philosophy-editorial-1"></script>
-  <script defer src="./stats-experience.js?v=philosophy-editorial-1"></script>
-  <script defer src="./app.js?v=philosophy-editorial-1"></script>
+  <script defer src="./stats-experience.js?v=course-workspace-1"></script>
+  <script defer src="./app.js?v=course-workspace-1"></script>
 </head>
 <body>
   <a class="skip" href="#main">跳到内容</a>
@@ -37,43 +39,49 @@
   </header>
   <main class="shell" id="main" tabindex="-1">
     <section id="page-map" aria-labelledby="map-heading">
-      <div class="atlas-hero">
-        <img class="atlas-hero-picture" src="./philosophy-hero.webp" alt="" width="1440" height="960" fetchpriority="high">
-        <div class="atlas-hero-inner">
-          <p class="atlas-overline">哲学</p>
-          <h1 class="atlas-hero-title" id="map-heading"><span>想清楚，</span><span>再下判断。</span></h1>
-          <p class="atlas-hero-lead">从每天遇到的分歧出发，练习把事实、价值判断和理由分开。</p>
-          <div class="atlas-actions">
-            <a class="atlas-primary" id="atlas-start" href="#course/philosophy/experience/claims">开始哲学第一课</a>
-            <a class="atlas-secondary" href="#course/philosophy/map">查看哲学能力全图</a>
-          </div>
-        </div>
+      <div class="atlas-home-heading">
+        <h1 id="map-heading">学习概览</h1>
+        <div class="progress-overview" id="overview" aria-label="总体学习进度"></div>
       </div>
-      <section class="atlas-section" aria-labelledby="philosophy-start-heading">
-        <div class="atlas-section-heading"><h2 id="philosophy-start-heading">从日常判断开始</h2><a class="text-button" href="#course/philosophy/overview">查看哲学课程</a></div>
-        <div class="atlas-lessons" id="atlas-philosophy-lessons"></div>
-      </section>
-      <section class="atlas-section atlas-map-section" aria-labelledby="disciplines-heading">
-        <div class="atlas-section-heading">
-          <div><h2 id="disciplines-heading" tabindex="-1">探索学科地图</h2><p>选一门学科，看看它如何改变同一个问题。</p></div>
-          <div class="progress-overview" id="overview" aria-label="总体学习进度"></div>
-        </div>
-      <section class="workspace" aria-label="互动学科地图">
-        <div class="canvas-panel">
-          <div class="map-toolbar">
-            <label class="search-box"><span class="magnifier" aria-hidden="true"></span><input id="map-search" type="search" placeholder="搜索学科或方法" aria-label="搜索学科或方法"></label>
-            <button type="button" id="link-toggle" class="soft" aria-pressed="true"><span class="toggle-dot" aria-hidden="true"></span>学科连线</button>
+      <div class="atlas-home-courses">
+        <section class="atlas-home-panel" aria-labelledby="philosophy-start-heading">
+          <div class="atlas-panel-heading">
+            <h2 id="philosophy-start-heading">哲学 · 快速体验</h2>
+            <a id="atlas-start" href="#course/philosophy/experience/claims">开始哲学第一课</a>
           </div>
-          <div class="graph" id="graph">
-            <canvas id="lines" aria-hidden="true"></canvas>
-            <div class="graph-center" aria-hidden="true"><span class="center-mark">＋</span><strong>同一个问题</strong><span>不同的解释</span></div>
-            <div id="groups" class="groups"></div>
+          <div class="atlas-lessons" id="atlas-philosophy-lessons"></div>
+        </section>
+        <section class="atlas-home-panel" aria-labelledby="philosophy-path-heading">
+          <div class="atlas-panel-heading">
+            <h2 id="philosophy-path-heading">哲学 · 完整课程</h2>
           </div>
-          <p id="map-status" class="map-caption" aria-live="polite"></p>
+          <div class="atlas-home-paths">
+            <a href="#course/philosophy/overview"><strong>课程目录</strong><span>查看课节和练习进度</span></a>
+            <a href="#course/philosophy/map"><strong>能力全图</strong><span>从论证、伦理到科学哲学</span></a>
+            <a href="#course/philosophy/benchmarks"><strong>专业验收</strong><span>大二专业课或入行一年对标</span></a>
+          </div>
+        </section>
+      </div>
+      <section class="atlas-map-section" aria-labelledby="disciplines-heading">
+        <div class="atlas-panel-heading atlas-map-heading">
+          <h2 id="disciplines-heading" tabindex="-1">学科地图</h2>
         </div>
-        <aside class="detail" aria-label="学科详情" id="detail"></aside>
-      </section>
-      <details class="source-list"><summary>学科分类与课程参考</summary><ul id="map-sources"></ul></details>
+        <section class="workspace" aria-label="互动学科地图">
+          <div class="canvas-panel">
+            <div class="map-toolbar">
+              <label class="search-box"><span class="magnifier" aria-hidden="true"></span><input id="map-search" type="search" placeholder="搜索学科或方法" aria-label="搜索学科或方法"></label>
+              <button type="button" id="link-toggle" class="soft" aria-pressed="true"><span class="toggle-dot" aria-hidden="true"></span>学科连线</button>
+            </div>
+            <div class="graph" id="graph">
+              <canvas id="lines" aria-hidden="true"></canvas>
+              <div class="graph-center" aria-hidden="true"><strong>同一个问题，不同的解释</strong></div>
+              <div id="groups" class="groups"></div>
+            </div>
+            <p id="map-status" class="map-caption" aria-live="polite"></p>
+          </div>
+          <aside class="detail" aria-label="学科详情" id="detail"></aside>
+        </section>
+        <details class="source-list"><summary>学科分类与课程参考</summary><ul id="map-sources"></ul></details>
       </section>
     </section>
     <section id="page-route" class="secondary-view" aria-labelledby="route-heading" hidden>

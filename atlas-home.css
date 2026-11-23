@@ -1,0 +1,198 @@
+#page-map {
+  --home-columns: minmax(0, 1fr) minmax(16rem, .49fr);
+  --home-gap: .875rem;
+  --home-edge: #e4e3eb;
+}
+
+#page-map .atlas-home-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: .95rem;
+}
+
+#page-map .atlas-home-heading h1 {
+  font-size: 1.875rem;
+  line-height: 1.22;
+  letter-spacing: -.025em;
+}
+
+#page-map .progress-overview {
+  grid-template-columns: auto auto;
+  gap: .28rem .85rem;
+  padding: 0;
+  min-width: 0;
+  border: 0;
+  background: none;
+}
+
+#page-map .progress-label { font-size: .8125rem; gap: .42rem; white-space: nowrap; }
+#page-map .progress-overview progress { grid-area: 2 / 1 / 3 / 3; height: .25rem; }
+
+#page-map .atlas-home-courses,
+#page-map .workspace {
+  display: grid;
+  grid-template-columns: var(--home-columns);
+  gap: var(--home-gap);
+}
+
+#page-map :is(.atlas-home-panel, .canvas-panel, .detail) {
+  min-width: 0;
+  border: 1px solid var(--home-edge);
+  border-radius: .8rem;
+  background: #fff;
+}
+
+#page-map .atlas-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .25rem .8rem;
+  flex-wrap: wrap;
+  padding: .55rem .85rem;
+  min-height: 2.65rem;
+}
+
+#page-map .atlas-panel-heading h2 {
+  font-size: 1.0625rem;
+  line-height: 1.28;
+  font-weight: 680;
+  letter-spacing: -.015em;
+  text-wrap: wrap;
+}
+
+#page-map .atlas-panel-heading a {
+  font-size: .8125rem;
+  font-weight: 630;
+  text-decoration: none;
+}
+
+#page-map .atlas-panel-heading a:hover { text-decoration: underline; }
+#page-map .atlas-lessons, #page-map .atlas-home-paths { display: grid; padding-block-end: .2rem; }
+
+#page-map :is(.atlas-lesson-card, .atlas-home-paths a) {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+  min-height: 3.25rem;
+  padding: .42rem .85rem;
+  border: 0;
+  border-top: 1px solid #efedf3;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+#page-map :is(.atlas-lesson-card, .atlas-home-paths a):hover { background: #f6f4fc; }
+#page-map :is(.atlas-lesson-card, .atlas-home-paths a):focus-visible { outline-offset: -3px; }
+
+#page-map .atlas-lesson-card {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: .65rem;
+}
+
+#page-map .atlas-lesson-card.is-next { background: #f8f6ff; }
+#page-map .atlas-lesson-card.is-next:hover { background: #f1edfc; }
+
+#page-map :is(.atlas-lesson-card, .atlas-home-paths a)::after {
+  content: "";
+  display: block;
+  width: .36rem;
+  height: .36rem;
+  margin-inline-end: .12rem;
+  border-top: 1.5px solid #7667a4;
+  border-right: 1.5px solid #7667a4;
+  transform: rotate(45deg);
+}
+
+#page-map .atlas-lesson-copy { min-width: 0; }
+#page-map :is(.atlas-lesson-card h3, .atlas-home-paths strong) { font-size: .9375rem; line-height: 1.35; letter-spacing: 0; font-weight: 655; text-wrap: wrap; }
+
+#page-map .atlas-home-paths a span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .8125rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#page-map .atlas-lesson-foot {
+  display: flex;
+  gap: .15rem .6rem;
+  align-items: baseline;
+  justify-content: end;
+  margin: 0;
+  width: auto;
+  padding: 0;
+  color: var(--muted);
+  font-size: .8125rem;
+  font-weight: 590;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+#page-map .atlas-lesson-status { color: #514174; font-size: inherit; }
+#page-map .atlas-home-paths a { grid-template-columns: minmax(0, 1fr) auto; column-gap: .45rem; }
+#page-map .atlas-home-paths a::after { grid-area: 1 / 2 / 3 / 3; }
+
+#page-map .atlas-map-section { margin: .9rem 0 0; }
+#page-map .atlas-map-heading { padding-inline: 0; }
+#page-map .workspace { align-items: start; }
+#page-map .map-toolbar { padding: .42rem .65rem; }
+#page-map .map-toolbar input { padding-block: .34rem; }
+#page-map .map-toolbar button { min-height: 2rem; padding: .27rem .58rem; }
+
+#page-map .graph { min-height: 0; container: atlas-map / inline-size; }
+#page-map .groups {
+  min-height: 0;
+  gap: 2.1rem .55rem;
+  padding: .6rem .65rem;
+}
+
+#page-map .group { padding: .46rem; border-radius: .6rem; }
+#page-map .group-title { margin-bottom: .29rem; }
+#page-map .node-list { gap: .2rem; }
+#page-map .node { min-height: 1.82rem; padding: .19rem .36rem; border-radius: .4rem; font-size: .8125rem; }
+#page-map .graph-center { min-width: 0; padding: .21rem .55rem; border-radius: .55rem; }
+#page-map .graph-center strong { font-size: .72rem; font-weight: 630; white-space: nowrap; }
+#page-map .map-caption { padding: .36rem .65rem; font-size: .79rem; }
+
+#page-map .detail { padding: .7rem .85rem; }
+#page-map .detail h2 { font-size: 1.25rem; letter-spacing: -.012em; }
+#page-map .detail-question { margin: .24rem 0 .52rem; font-size: .875rem; }
+#page-map .detail .node-course-info { margin-block: .48rem; padding: .55rem .62rem; gap: .25rem; }
+#page-map .detail .node-course-info p, #page-map .detail dd { font-size: .84rem; line-height: 1.48; }
+#page-map .detail dl { margin-block: .58rem; gap: .42rem .7rem; }
+#page-map .detail :is(.connections, .detail-resources) { margin-top: .6rem; padding-top: .55rem; }
+#page-map .source-list { margin-top: .45rem; }
+
+@container atlas-map (min-width: 43rem) {
+  #page-map .node-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 58rem) {
+  #page-map .workspace { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 43rem) {
+  #page-map .atlas-home-courses { grid-template-columns: 1fr; }
+  #page-map .atlas-home-heading h1 { font-size: 1.6rem; }
+  #page-map .atlas-home-paths { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #page-map .atlas-home-paths a { column-gap: 0; grid-template-columns: minmax(0, 1fr); }
+  #page-map .atlas-home-paths a::after { display: none; }
+  #page-map .atlas-home-paths a span { white-space: normal; }
+  #page-map .atlas-home-paths a + a { border-inline-start: 1px solid #efedf3; }
+}
+
+@media (max-width: 34rem) {
+  #page-map .atlas-lesson-card { gap: .42rem; }
+  #page-map .atlas-lesson-foot { display: grid; justify-items: end; font-size: .76rem; }
+  #page-map .atlas-home-paths a { padding-inline: .55rem; }
+  #page-map .groups { gap: .5rem; padding: .55rem; grid-template-rows: auto auto auto; }
+  #page-map .node { min-height: 2.15rem; }
+}

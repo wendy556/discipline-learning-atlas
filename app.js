@@ -6,6 +6,8 @@ const disciplines = new Map(data.disciplines.map(d => [d.id, d]));
 const categories = new Map(data.categories.map(c => [c.id, c]));
 const stages = ['未开始', '试学', '已打基础', '已通过目标深度验收'];
 const experiences = new Map([['stats',StatsExperience],['philosophy',PhilosophyExperience]]);
+const experienceUnits = {stats:window.STATS_QUICK, philosophy:window.PHILOSOPHY_QUICK};
+const narrowCourse = matchMedia('(max-width: 58rem)');
 const notesKey = 'discipline-atlas-v1';
 const empty = () => ({
   version:1, active:'philosophy', progress:{}, notes:[], learning:Course.normalize(),
@@ -136,19 +138,15 @@ function initMap() {
 }
 function renderPhilosophyHome() {
   const quick = state.philosophyQuick;
-  const units = window.PHILOSOPHY_QUICK;
   const next = PhilosophyExperience.suggested(quick,state.learning);
   const startLink = byId('atlas-start');
   startLink.href = PhilosophyExperience.url('experience',next.id);
   startLink.textContent = PhilosophyExperience.hasStarted(quick) ? '继续学哲学' : '开始哲学第一课';
-  const marks = ['≠','◇','∥'];
-  byId('atlas-philosophy-lessons').innerHTML = units.map((unit,index) => {
+  byId('atlas-philosophy-lessons').innerHTML = experienceUnits.philosophy.map(unit => {
     const progress = PhilosophyExperience.progress(unit,quick,state.learning);
-    return '<a class="atlas-lesson-card" href="' + PhilosophyExperience.url('experience',unit.id) + '">' +
-      '<span class="atlas-lesson-mark" aria-hidden="true">' + marks[index] + '</span>' +
-      '<div class="atlas-lesson-copy"><h3>' + escapeHTML(unit.title) + '</h3><p>' + escapeHTML(unit.hook) + '</p></div>' +
-      '<div class="atlas-lesson-foot"><span>' + unit.minutes + ' 分钟' +
-      (progress === '待开始' ? '' : ' · ' + escapeHTML(progress)) + '</span><span aria-hidden="true">＋</span></div></a>';
+    return '<a class="atlas-lesson-card' + (unit.id === next.id ? ' is-next' : '') + '" href="' + PhilosophyExperience.url('experience',unit.id) + '">' +
+      '<div class="atlas-lesson-copy"><h3>' + escapeHTML(unit.title) + '</h3></div>' +
+      '<div class="atlas-lesson-foot"><span>' + unit.minutes + ' 分钟</span><small class="atlas-lesson-status">' + escapeHTML(progress) + '</small></div></a>';
   }).join('');
 }
 function renderOverview() {
@@ -254,8 +252,11 @@ function drawGraph() {
 }
 function renderRoute() {
   const section = byId('route-content');
-  section.innerHTML = PhilosophyExperience.entry(state.philosophyQuick,state.learning,true) +
-    '<section class="atlas-section atlas-route-stats"><div class="atlas-section-heading"><h2>继续探索</h2><a class="soft" href="#course/stats/overview">打开统计与因果推断</a></div></section>' +
+  const next = PhilosophyExperience.suggested(state.philosophyQuick,state.learning);
+  section.innerHTML = '<div class="route-course-list"><article class="card route-course"><h2>哲学</h2><p>下一课 · ' + escapeHTML(next.title) + ' · ' + next.minutes + ' 分钟</p>' +
+    '<div class="course-links"><a class="primary" href="' + PhilosophyExperience.url('experience',next.id) + '">打开课节</a><a class="soft" href="#course/philosophy/map">能力全图</a></div></article>' +
+    '<article class="card route-course"><h2>统计与因果推断</h2><p>三节体验 · 看分母、找混杂、用不确定性做决定</p>' +
+    '<div class="course-links"><a class="soft" href="#course/stats/overview">课程目录</a><a class="soft" href="#course/stats/map">能力全图</a></div></article></div>' +
     '<details class="stats-scope"><summary>统计进阶 · 企鹅数据项目和原有课程</summary><div class="roadmap-grid">' + data.roadmap.map((item, i) =>
     '<article class="card' + (i === 0 ? ' highlight' : '') + '"><h3>' + escapeHTML(item.title) + '</h3><p class="timing">' + escapeHTML(item.timing) + '</p><p>' + escapeHTML(item.description) + '</p><ul>' + item.items.map(text => '<li>' + escapeHTML(text) + '</li>').join('') + '</ul>' +
     (i === 0 ? '<p><button type="button" class="soft" id="start-trial">查看原有课程与项目</button></p>' : '') + '</article>').join('') + '</div></details>' +
@@ -411,6 +412,29 @@ function initNotes() {
 function signature(note) {
   return JSON.stringify([note.title, note.body, note.discipline, note.type, note.source, note.updated]);
 }
+function renderCourseShell(id, experience, content, view, item) {
+  const units = experienceUnits[id];
+  const quick = view === 'experience';
+  const name = id === 'stats' ? '统计与因果推断' : '哲学';
+  const sections = [['overview','课程概览'],['map','能力全图'],['benchmarks','专业验收'],
+    id === 'stats' ? ['series','原有课程与项目'] : ['baseline','基础自测']];
+  const outline = units.map(unit => '<li><a class="course-outline-step" href="' + experience.url('experience',unit.id) + '"' +
+    (quick && item === unit.id ? ' aria-current="step"' : '') + '><span>' + escapeHTML(unit.title) + '</span>' +
+    '<small class="course-outline-status"><span>' + unit.minutes + ' 分钟</span><span data-outline-unit="' + unit.id + '">' +
+    escapeHTML(experience.progress(unit,state[quickStateKey(id)],state.learning)) + '</span></small></a></li>').join('');
+  const links = sections.map(([section,title]) => '<a href="' + experience.url(section) + '"' +
+    (section === view || (section === 'benchmarks' && view === 'benchmark') ? ' aria-current="page"' : '') + '>' + title + '</a>').join('');
+  return '<div class="course-workspace' + (quick ? ' is-quick' : '') + '" data-course-owner="' + id + '">' +
+    '<aside class="course-sidebar"><details class="course-directory-dialog"' + (narrowCourse.matches ? '' : ' open') + '>' +
+    '<summary class="course-directory-summary">' + name + ' · 课节目录</summary><nav aria-label="' + name + '课程目录">' +
+    '<h2 class="course-sidebar-title">' + name + '</h2><ol class="course-sidebar-list">' + outline +
+    '</ol><div class="course-sidebar-links">' + links + '</div></nav></details></aside>' +
+    '<div class="course-content">' + content + '</div></div>';
+}
+narrowCourse.addEventListener('change', event => {
+  const directory = byId('page-course').querySelector('.course-directory-dialog');
+  if (directory) directory.open = !event.matches;
+});
 function switchView() {
   const views = ['map', 'route', 'course', 'ai', 'notes'];
   const hash = location.hash.slice(1);
@@ -448,6 +472,15 @@ function commitLearning(message) {
   renderNodes();
   renderDetail();
   for (const experience of experiences.values()) experience.updateProgress();
+  const workspace = byId('page-course').querySelector('[data-course-owner]');
+  if (workspace) {
+    const id = workspace.dataset.courseOwner;
+    const experience = experiences.get(id);
+    for (const status of workspace.querySelectorAll('[data-outline-unit]')) {
+      const unit = experienceUnits[id].find(unit => unit.id === status.dataset.outlineUnit);
+      status.textContent = experience.progress(unit,state[quickStateKey(id)],state.learning);
+    }
+  }
 }
 Course.configure(byId('page-course'),{
   model:() => state.learning,
@@ -460,11 +493,16 @@ for (const [id,experience] of experiences) {
     model:() => state[quickStateKey(id)],
     learning:() => state.learning,
     commit:commitLearning,
+    shell:(content,view,item) => renderCourseShell(id,experience,content,view,item),
     note:(title,href) => newNote(id,'生活应用 · ' + title,'下一步',new URL(href,location.href).href)
   });
 }
 initMap();
 initNotes();
+document.querySelector('.skip').addEventListener('click', event => {
+  event.preventDefault();
+  byId('main').focus();
+});
 renderOverview();
 renderNodes();
 renderDetail();

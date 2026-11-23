@@ -1,5 +1,5 @@
 'use strict';
-function createLearningExperience({id,name,lead,units,atlas,archive}) {
+function createLearningExperience({id,name,lead,units,atlas}) {
   const modules = new Map(atlas.modules.map(module => [module.id, module]));
   const byUnit = new Map(units.map(unit => [unit.id, unit]));
   const labels = {learn:'站内体验', external:'可做外部练习', planned:'已规划'};
@@ -61,27 +61,13 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
     safe(item.url) + '">' + safe(item.label) + '</a></li>').join('');
   const stageTag = text => '<span class="stats-tag">' + safe(text) + '</span>';
 
-  function entry(state, learner, compact = false) {
-    const next = suggested(state,learner);
-    return '<div class="stats-hero"><div class="stats-hero-copy"><p class="stats-stage">' + safe(name) + ' · ' +
-      next.minutes + ' 分钟</p><h2>' + (compact ? '今天学一个思维' : '从生活问题开始') + '</h2><p>' +
-      safe(next.title) + ' · ' + safe(next.hook) + '</p></div><div class="stats-hero-actions">' +
-      '<a class="primary" href="' + url('experience',next.id) + '">开始快速体验</a>' +
-      '<a class="soft" href="' + url('map') + '">查看完整能力地图</a></div></div>';
-  }
-
   function configure(target, callbacks) {
     el = target;
     adapter = callbacks;
   }
   function header(title, description) {
-    return '<div class="intro"><div><a class="plan-link" href="#map">学科地图</a><h1 id="course-heading">' +
-      safe(title) + '</h1><p>' + safe(description) + '</p></div></div>';
-  }
-  function courseNav(active) {
-    const pages = [['overview','课程首页'],['map','能力全图'],['benchmarks','专业验收'],archive];
-    return '<nav class="stats-course-nav" aria-label="学科课程导航">' + pages.map(([key,title]) =>
-      '<a href="' + url(key) + '"' + (active === key ? ' aria-current="page"' : '') + '>' + title + '</a>').join('') + '</nav>';
+    return '<header class="course-intro"><h1 id="course-heading">' + safe(title) + '</h1><p>' +
+      safe(description) + '</p></header>';
   }
   function launcher() {
     const count = recognizedCount(model(),learning());
@@ -107,9 +93,9 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
     const chosen = modules.get(selected);
     const successors = chosen ? atlas.modules.filter(module => module.prerequisites.includes(chosen.id)) : [];
     const related = new Set(chosen ? [...chosen.prerequisites,...successors.map(module => module.id)] : []);
-    return '<section class="stats-section" aria-labelledby="stats-map-title"><div class="stats-section-header"><div>' +
-      '<h2 id="stats-map-title">' + safe(name) + '能力全图</h2><p>' + safe(atlas.scope) + '</p></div>' +
-      stageTag(atlas.modules.length + ' 个能力模块') + '</div><div class="stats-map-layout"><div class="stats-map-grid">' +
+    return '<section class="stats-section" aria-labelledby="course-heading"><header class="course-intro stats-section-header"><div>' +
+      '<h1 id="course-heading">' + safe(name) + '能力全图</h1><p>' + safe(atlas.scope) + '</p></div>' +
+      stageTag(atlas.modules.length + ' 个能力模块') + '</header><div class="stats-map-layout"><div class="stats-map-grid">' +
       atlas.modules.map(module => '<article class="stats-map-card' + (related.has(module.id) ? ' is-related' : '') +
         (module.id === selected ? ' is-active' : '') + '"><div class="stats-launch-card-meta">' +
         stageTag(labels[module.availability]) + (module.experience ? stageTag(progress(byUnit.get(module.experience),model(),learning())) : '') +
@@ -127,8 +113,8 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
   }
 
   function standards() {
-    return '<section class="stats-section" aria-labelledby="stats-bench-title"><div class="stats-section-header"><div>' +
-      '<h2 id="stats-bench-title">专业深度验收</h2><p>选择学科或行业路径，按公开基准与独立交付记录能力。</p></div></div>' +
+    return '<section class="stats-section" aria-labelledby="course-heading">' +
+      header('专业深度验收','选择学科或行业路径，按公开基准与独立交付记录能力。') +
       '<div class="stats-bench-grid">' + Object.entries(atlas.benchmark).map(([kind,item]) => {
         const summary = kind === 'academic' ? atlas.academic : atlas.industry;
         const passed = Course.hasPassed(learning(),benchmarkId(kind));
@@ -140,15 +126,19 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
       anchors(atlas.sources) + '</ul></details></section>';
   }
   function overview() {
-    el.innerHTML = header(name,lead) +
-      courseNav('overview') + entry(model(),learning()) + launcher() + mapSection() + standards() +
-      '<div class="stats-step-nav"><button class="soft" type="button" id="stats-download">下载学习记录</button></div>';
+    el.innerHTML = adapter.shell(header(name,lead) + launcher() + '<section class="stats-section" aria-labelledby="stats-next-title">' +
+      '<div class="stats-section-header"><h2 id="stats-next-title">进阶学习</h2></div>' +
+      '<div class="atlas-course-overview-links">' +
+      '<a class="stats-map-card" href="' + url('map') + '"><h3>能力全图</h3><p>查看 ' + atlas.modules.length +
+      ' 个能力模块、先修关系和各模块的练习标准。</p></a>' +
+      '<a class="stats-map-card" href="' + url('benchmarks') + '"><h3>专业验收</h3>' +
+      '<p>选择大二专业课或入行一年对标，查看独立作业与评分标准。</p></a></div></section>' +
+      '<div class="stats-step-nav"><button class="soft" type="button" id="stats-download">下载学习记录</button></div>', 'overview');
     el.querySelector('#stats-download').addEventListener('click',Course.downloadReport);
   }
   function renderMap(id) {
     const selected = modules.has(id) ? id : atlas.modules[0].id;
-    el.innerHTML = header('完整能力地图','顺着先修关系挑选下一项能力，也可直接开始已开放的体验。') + courseNav('map') +
-      mapSection(selected) + standards();
+    el.innerHTML = adapter.shell(mapSection(selected), 'map', selected);
     if (modules.has(id)) {
       const detail = el.querySelector('#stats-module-title');
       detail.focus({preventScroll:true});
@@ -158,17 +148,17 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
   function renderBenchmark(kind) {
     const item = Object.hasOwn(atlas.benchmark,kind) ? atlas.benchmark[kind] : null;
     if (!item) {
-      el.innerHTML = header('专业深度验收','用独立完成的题目、项目和真实反馈对照长期目标。') + courseNav('benchmarks') + standards();
+      el.innerHTML = adapter.shell(standards(), 'benchmarks');
       return;
     }
-    el.innerHTML = header(item.title, kind === 'academic' ? '大二专业课范围内的独立作业' : '入行一年对标的模拟工作样本') +
-      courseNav('benchmarks') + '<section class="course-card"><h2>交付标准</h2><p>' + safe(item.task) + '</p>' +
+    el.innerHTML = adapter.shell(header(item.title, kind === 'academic' ? '大二专业课范围内的独立作业' : '入行一年对标的模拟工作样本') +
+      '<section class="course-card"><h2>交付标准</h2><p>' + safe(item.task) + '</p>' +
       '<p><strong>需要提交</strong> · ' + safe(item.artifacts) + '</p><p>' +
       (kind === 'academic' ? '用试题和评分依据对照对应课程的要求。提交时可以写入复现步骤和作品链接。' :
         '在训练站提交模拟作业后，可以用真实任务、可复核的交付和同事反馈验证岗位能力。') +
       '</p><details class="stats-scope"><summary>提前查看验收维度</summary><ul>' +
       item.criteria.map(criterion => '<li>' + safe(criterion.label) + '</li>').join('') + '</ul></details></section>' +
-      '<div class="stats-section" id="stats-benchmark-exercise"></div>';
+      '<div class="stats-section" id="stats-benchmark-exercise"></div>', 'benchmark', kind);
     el.querySelector('#stats-benchmark-exercise').append(Course.exercise(benchmarkId(kind),{independent:true}));
   }
 
@@ -177,7 +167,8 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
     const selected = entries.at(-1)?.choice;
     const current = unit.question.choices.find(choice => choice.id === selected);
     const good = selected === unit.question.correct;
-    return '<section class="stats-quick-section" aria-labelledby="stats-predict"><span class="stats-stage">预测</span><h2 id="stats-predict">' +
+    return '<section class="stats-quick-section atlas-lesson-prediction" aria-labelledby="stats-predict">' +
+      '<span class="stats-stage">先做判断</span><p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict">' +
       safe(unit.question.prompt) + '</h2><div class="stats-question-choices" role="group" aria-label="选择你的判断">' +
       unit.question.choices.map(choice => '<button class="stats-option" data-choice="' + safe(choice.id) + '" type="button" aria-pressed="' +
         (selected === choice.id) + '">' + safe(choice.label) + '</button>').join('') + '</div>' +
@@ -195,7 +186,8 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
   function experimentBox(unit) {
     const test = unit.experiment;
     const choice = test.variants.find(v => v.id === selectedExperiments.get(unit.id)) ?? test.variants[0];
-    return '<section class="stats-quick-section" aria-labelledby="stats-compare"><span class="stats-stage">对照实验 · 示意</span><h2 id="stats-compare">' +
+    return '<section class="stats-quick-section atlas-lesson-contrast" aria-labelledby="stats-compare">' +
+      '<span class="stats-stage">对照实验 · 示意</span><h2 id="stats-compare">' +
       safe(test.title) + '</h2><p>' + safe(test.description) + '</p><div class="stats-experiment-tabs" role="group" aria-label="切换对照条件">' +
       test.variants.map(variant => '<button type="button" class="soft" data-variant="' + safe(variant.id) + '" aria-pressed="' +
         (choice.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div><div aria-live="polite"><div class="stats-bars">' +
@@ -211,21 +203,23 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
     const index = units.indexOf(unit);
     const next = units[index + 1];
     const module = atlas.modules.find(item => item.experience === unit.id);
-    el.innerHTML = header(unit.title,unit.minutes + ' 分钟 · ' + unit.hook) + courseNav('overview') +
-      '<div class="stats-quick"><div class="stats-step-nav"><span id="stats-quick-status">' + stageTag(progress(unit,model(),learning())) +
-      '</span><a class="soft" href="' + url('map',module?.id) + '">查看对应能力</a></div>' +
-      '<ol class="stats-stage-list"><li>先判断</li><li>切换条件</li><li>独立迁移</li><li>用到生活里</li></ol>' +
+    el.innerHTML = adapter.shell('<header class="atlas-lesson-header"><div class="atlas-lesson-heading">' +
+      '<p class="atlas-lesson-breadcrumb">第 ' + (index + 1) + ' 节 · ' + unit.minutes + ' 分钟</p>' +
+      '<h1 id="course-heading">' + safe(unit.title) + '</h1></div>' +
+      '<div class="atlas-lesson-meta"><span id="stats-quick-status">' + stageTag(progress(unit,model(),learning())) +
+      '</span><a href="' + url('map',module?.id) + '">对应能力</a></div></header>' +
+      '<div class="stats-quick atlas-lesson-grid">' +
       '<div id="stats-question-box"></div><div id="stats-experiment-box"></div>' +
       '<section class="stats-takeaway"><span class="stats-stage">下次遇到，先问</span><h2>' + safe(unit.thought) + '</h2><p>' +
       '<strong>适用边界</strong> · ' + safe(unit.limit) + '</p></section>' +
-      '<section class="stats-quick-section" aria-labelledby="stats-transfer"><span class="stats-stage">换个场景</span>' +
+      '<div class="atlas-lesson-followup"><section class="stats-quick-section atlas-lesson-transfer" aria-labelledby="stats-transfer">' +
       '<h2 id="stats-transfer">独立迁移</h2><p>先写判断和依据，再对照评分。首次作答通过可记录为能独立迁移。</p>' +
       '<div id="stats-quick-transfer"></div></section>' +
-      '<section class="stats-life"><span class="stats-stage">今天就用</span><h2>把方法用到自己的生活</h2><p>' + safe(unit.life.prompt) +
-      '</p><p class="course-meta">' + safe(unit.life.example) + '</p><button type="button" class="soft" id="stats-life-note">记下我的生活应用</button></section>' +
-      '<div class="stats-step-nav"><a class="soft" href="' + url('overview') + '">回到快速体验列表</a>' +
-      (next ? '<a class="primary" href="' + url('experience',next.id) + '">下一项体验</a>' :
-        '<a class="primary" href="' + url('map') + '">从全图选下一项能力</a>') + '</div></div>';
+      '<section class="stats-life atlas-lesson-practice"><h2>今天就用</h2><p>' + safe(unit.life.prompt) +
+      '</p><p class="course-meta">' + safe(unit.life.example) + '</p><button type="button" class="soft" id="stats-life-note">记下我的生活应用</button></section></div>' +
+      '<div class="stats-step-nav">' +
+      (next ? '<a class="primary" href="' + url('experience',next.id) + '">下一课</a>' :
+        '<a class="primary" href="' + url('map') + '">查看能力全图</a>') + '</div></div>', 'experience', unit.id);
     const question = el.querySelector('#stats-question-box');
     const experiment = el.querySelector('#stats-experiment-box');
     function updateQuestion(focus = false) {
@@ -285,14 +279,14 @@ function createLearningExperience({id,name,lead,units,atlas,archive}) {
     else if (view === 'benchmarks' || view === 'benchmark') renderBenchmark(id);
     else overview();
   }
-  return {configure,normalize,merge,hasStarted,entry,render,updateProgress,report,url,progress,suggested,
+  return {configure,normalize,merge,hasStarted,render,updateProgress,report,url,progress,suggested,
     views:['overview','map','experience','benchmarks','benchmark']};
 }
 window.StatsExperience = createLearningExperience({
   id:'stats', name:'统计与因果推断', lead:'判断你看到的差异、证据和因果。',
-  units:window.STATS_QUICK, atlas:window.STATS_MAP, archive:['series','原有课程与项目']
+  units:window.STATS_QUICK, atlas:window.STATS_MAP
 });
 window.PhilosophyExperience = createLearningExperience({
   id:'philosophy', name:'哲学', lead:'拆开一个判断，问清它为什么成立。',
-  units:window.PHILOSOPHY_QUICK, atlas:window.PHILOSOPHY_MAP, archive:['baseline','原有基础自测']
+  units:window.PHILOSOPHY_QUICK, atlas:window.PHILOSOPHY_MAP
 });
