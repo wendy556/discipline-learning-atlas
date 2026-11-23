@@ -1,13 +1,12 @@
 'use strict';
-window.StatsExperience = (() => {
-  const units = window.STATS_QUICK;
-  const atlas = window.STATS_MAP;
+function createLearningExperience({id,name,lead,units,atlas,archive}) {
   const modules = new Map(atlas.modules.map(module => [module.id, module]));
   const byUnit = new Map(units.map(unit => [unit.id, unit]));
   const labels = {learn:'站内体验', external:'可做外部练习', planned:'已规划'};
-  const base = '#course/stats/';
-  const taskId = id => 'quick-' + id;
-  const benchmarkId = kind => 'benchmark-' + kind;
+  const base = '#course/' + id + '/';
+  const prefix = id === 'stats' ? '' : id + '-';
+  const taskId = unit => 'quick-' + prefix + unit;
+  const benchmarkId = kind => 'benchmark-' + prefix + kind;
   const safe = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const encode = id => encodeURIComponent(id);
   const url = (section, id = '') => base + section + (id ? '/' + encode(id) : '');
@@ -64,8 +63,8 @@ window.StatsExperience = (() => {
 
   function entry(state, learner, compact = false) {
     const next = suggested(state,learner);
-    return '<div class="stats-hero"><div class="stats-hero-copy"><p class="stats-stage">统计与因果推断 · ' +
-      next.minutes + ' 分钟</p><h2>' + (compact ? '今天学一个思维' : '从生活问题学统计') + '</h2><p>' +
+    return '<div class="stats-hero"><div class="stats-hero-copy"><p class="stats-stage">' + safe(name) + ' · ' +
+      next.minutes + ' 分钟</p><h2>' + (compact ? '今天学一个思维' : '从生活问题开始') + '</h2><p>' +
       safe(next.title) + ' · ' + safe(next.hook) + '</p></div><div class="stats-hero-actions">' +
       '<a class="primary" href="' + url('experience',next.id) + '">开始快速体验</a>' +
       '<a class="soft" href="' + url('map') + '">查看完整能力地图</a></div></div>';
@@ -80,8 +79,8 @@ window.StatsExperience = (() => {
       safe(title) + '</h1><p>' + safe(description) + '</p></div></div>';
   }
   function courseNav(active) {
-    const pages = [['overview','统计课程首页'],['map','完整能力地图'],['benchmarks','专业验收'],['series','原有课程与项目']];
-    return '<nav class="stats-course-nav" aria-label="统计课程导航">' + pages.map(([key,title]) =>
+    const pages = [['overview','课程首页'],['map','能力全图'],['benchmarks','专业验收'],archive];
+    return '<nav class="stats-course-nav" aria-label="学科课程导航">' + pages.map(([key,title]) =>
       '<a href="' + url(key) + '"' + (active === key ? ' aria-current="page"' : '') + '>' + title + '</a>').join('') + '</nav>';
   }
   function launcher() {
@@ -109,7 +108,7 @@ window.StatsExperience = (() => {
     const successors = chosen ? atlas.modules.filter(module => module.prerequisites.includes(chosen.id)) : [];
     const related = new Set(chosen ? [...chosen.prerequisites,...successors.map(module => module.id)] : []);
     return '<section class="stats-section" aria-labelledby="stats-map-title"><div class="stats-section-header"><div>' +
-      '<h2 id="stats-map-title">统计与因果推断能力全图</h2><p>' + safe(atlas.scope) + '</p></div>' +
+      '<h2 id="stats-map-title">' + safe(name) + '能力全图</h2><p>' + safe(atlas.scope) + '</p></div>' +
       stageTag(atlas.modules.length + ' 个能力模块') + '</div><div class="stats-map-layout"><div class="stats-map-grid">' +
       atlas.modules.map(module => '<article class="stats-map-card' + (related.has(module.id) ? ' is-related' : '') +
         (module.id === selected ? ' is-active' : '') + '"><div class="stats-launch-card-meta">' +
@@ -141,7 +140,7 @@ window.StatsExperience = (() => {
       anchors(atlas.sources) + '</ul></details></section>';
   }
   function overview() {
-    el.innerHTML = header('统计与因果推断','练习发现值得问的问题，并判断证据能支持什么结论。') +
+    el.innerHTML = header(name,lead) +
       courseNav('overview') + entry(model(),learning()) + launcher() + mapSection() + standards() +
       '<div class="stats-step-nav"><button class="soft" type="button" id="stats-download">下载学习记录</button></div>';
     el.querySelector('#stats-download').addEventListener('click',Course.downloadReport);
@@ -162,11 +161,11 @@ window.StatsExperience = (() => {
       el.innerHTML = header('专业深度验收','用独立完成的题目、项目和真实反馈对照长期目标。') + courseNav('benchmarks') + standards();
       return;
     }
-    el.innerHTML = header(item.title, kind === 'academic' ? '大二专业课范围内的独立作业' : '初级分析师的模拟工作样本') +
+    el.innerHTML = header(item.title, kind === 'academic' ? '大二专业课范围内的独立作业' : '入行一年对标的模拟工作样本') +
       courseNav('benchmarks') + '<section class="course-card"><h2>交付标准</h2><p>' + safe(item.task) + '</p>' +
       '<p><strong>需要提交</strong> · ' + safe(item.artifacts) + '</p><p>' +
       (kind === 'academic' ? '用试题和评分依据对照对应课程的要求。提交时可以写入复现步骤和作品链接。' :
-        '在训练站提交模拟作业后，可用真实任务、可重跑分析和同事复核验证岗位能力。') +
+        '在训练站提交模拟作业后，可以用真实任务、可复核的交付和同事反馈验证岗位能力。') +
       '</p><details class="stats-scope"><summary>提前查看验收维度</summary><ul>' +
       item.criteria.map(criterion => '<li>' + safe(criterion.label) + '</li>').join('') + '</ul></details></section>' +
       '<div class="stats-section" id="stats-benchmark-exercise"></div>';
@@ -200,9 +199,11 @@ window.StatsExperience = (() => {
       safe(test.title) + '</h2><p>' + safe(test.description) + '</p><div class="stats-experiment-tabs" role="group" aria-label="切换对照条件">' +
       test.variants.map(variant => '<button type="button" class="soft" data-variant="' + safe(variant.id) + '" aria-pressed="' +
         (choice.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div><div aria-live="polite"><div class="stats-bars">' +
-      choice.rows.map(row => '<div class="stats-bar"><span>' + safe(row.label) + '</span><strong>' + safe(row.text) +
-        '</strong><div class="stats-meter" aria-hidden="true"><span style="width:' + Math.min(100,Math.max(0,Number(row.value) || 0)) +
-        '%"></span></div></div>').join('') + '</div><p class="stats-experiment-summary">' + safe(choice.summary) + '</p></div><p>' +
+      choice.rows.map(row => Number.isFinite(row.value)
+        ? '<div class="stats-bar"><span>' + safe(row.label) + '</span><strong>' + safe(row.text) +
+          '</strong><div class="stats-meter" aria-hidden="true"><span style="width:' + Math.min(100,Math.max(0,row.value)) + '%"></span></div></div>'
+        : '<div class="atlas-contrast"><span class="stats-stage">' + safe(row.label) + '</span><p>' + safe(row.text) + '</p></div>'
+      ).join('') + '</div><p class="stats-experiment-summary">' + safe(choice.summary) + '</p></div><p>' +
       safe(test.takeaway) + '</p></section>';
   }
   function renderQuick(id) {
@@ -259,15 +260,17 @@ window.StatsExperience = (() => {
   }
   function updateProgress() {
     const section = el.querySelector('#stats-quick-status');
-    const [, , view, id] = location.hash.slice(1).split('/');
-    if (section && view === 'experience' && byUnit.has(id)) section.innerHTML = stageTag(progress(byUnit.get(id),model(),learning()));
+    const [, discipline, view, unit] = location.hash.slice(1).split('/');
+    if (section && discipline === id && view === 'experience' && byUnit.has(unit)) {
+      section.innerHTML = stageTag(progress(byUnit.get(unit),model(),learning()));
+    }
   }
   function report(quick) {
     const lines = [];
     for (const unit of units) {
       const entries = quick.choices[unit.id] || [];
       if (!entries.length) continue;
-      lines.push('## 快速体验 · ' + unit.title,'',unit.question.prompt,'');
+      lines.push('## ' + name + ' · ' + unit.title,'',unit.question.prompt,'');
       for (const item of entries) {
         const answer = unit.question.choices.find(choice => choice.id === item.choice);
         lines.push('- ' + timeLabel(item.at) + ' · ' + answer.label, '  ' + answer.feedback);
@@ -282,6 +285,14 @@ window.StatsExperience = (() => {
     else if (view === 'benchmarks' || view === 'benchmark') renderBenchmark(id);
     else overview();
   }
-  return {configure,normalize,merge,hasStarted,entry,render,updateProgress,report,url,
+  return {configure,normalize,merge,hasStarted,entry,render,updateProgress,report,url,progress,suggested,
     views:['overview','map','experience','benchmarks','benchmark']};
-})();
+}
+window.StatsExperience = createLearningExperience({
+  id:'stats', name:'统计与因果推断', lead:'判断你看到的差异、证据和因果。',
+  units:window.STATS_QUICK, atlas:window.STATS_MAP, archive:['series','原有课程与项目']
+});
+window.PhilosophyExperience = createLearningExperience({
+  id:'philosophy', name:'哲学', lead:'拆开一个判断，问清它为什么成立。',
+  units:window.PHILOSOPHY_QUICK, atlas:window.PHILOSOPHY_MAP, archive:['baseline','原有基础自测']
+});

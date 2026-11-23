@@ -5,8 +5,13 @@ const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':
 const disciplines = new Map(data.disciplines.map(d => [d.id, d]));
 const categories = new Map(data.categories.map(c => [c.id, c]));
 const stages = ['未开始', '试学', '已打基础', '已通过目标深度验收'];
+const experiences = new Map([['stats',StatsExperience],['philosophy',PhilosophyExperience]]);
 const notesKey = 'discipline-atlas-v1';
-const empty = () => ({version: 1, active: 'stats', progress: {}, notes: [], learning: Course.normalize(), quick: StatsExperience.normalize()});
+const empty = () => ({
+  version:1, active:'philosophy', progress:{}, notes:[], learning:Course.normalize(),
+  quick:StatsExperience.normalize(), philosophyQuick:PhilosophyExperience.normalize()
+});
+const quickStateKey = id => id === 'stats' ? 'quick' : 'philosophyQuick';
 let state = empty();
 let storageIssue = false;
 try {
@@ -20,7 +25,10 @@ function normalize(input) {
   if (!input || input.version !== 1 || !Array.isArray(input.notes) || typeof input.progress !== 'object' || !input.progress) throw new TypeError('无效的备份格式');
   const clean = empty();
   clean.learning = Course.normalize(input.learning);
-  clean.quick = StatsExperience.normalize(input.quick);
+  for (const [id,experience] of experiences) {
+    const key = quickStateKey(id);
+    clean[key] = experience.normalize(input[key]);
+  }
   clean.active = disciplines.has(input.active) ? input.active : clean.active;
   for (const [id, record] of Object.entries(input.progress)) {
     if (disciplines.has(id) && Number.isInteger(record?.stage) && record.stage >= 0 && record.stage < stages.length) {
@@ -67,17 +75,21 @@ const nodes = new Map();
 let showLinks = true;
 let showCurrentNode = true;
 const stageFor = id => {
-  if (id === 'stats') return Course.summary(state.learning).started || StatsExperience.hasStarted(state.quick) ? 1 : 0;
-  return Course.diagnosticPassed(state.learning,id) ? 1 : 0;
+  const experience = experiences.get(id);
+  const started = experience?.hasStarted(state[quickStateKey(id)]);
+  const originalStats = id === 'stats' && Course.summary(state.learning).started;
+  return started || originalStats || Course.diagnosticPassed(state.learning,id) ? 1 : 0;
 };
 function courseInfo(id) {
   const legacy = (state.progress[id]?.stage ?? 0) > 0
     ? '<p class="course-meta">旧版自记进度：' + escapeHTML(stages[state.progress[id].stage]) + '</p>' : '';
-  if (id === 'stats') {
+  const experience = experiences.get(id);
+  if (experience) {
+    const title = disciplines.get(id).name;
     return '<div class="node-course-info"><span class="stage-pill">' + stages[stageFor(id)] +
       '</span><p>从生活里的三个判断开始，再沿全图深入。</p>' + legacy +
-      '<div class="course-links"><a class="primary course-entry" href="' + Course.courseURL(id) + '">统计课程</a>' +
-      '<a class="text-button" href="' + StatsExperience.url('map') + '">查看完整能力地图</a></div></div>';
+      '<div class="course-links"><a class="primary course-entry" href="' + experience.url('overview') + '">' + escapeHTML(title) + '课程</a>' +
+      '<a class="text-button" href="' + experience.url('map') + '">查看完整能力地图</a></div></div>';
   }
   const hasTest = Course.isDiagnostic(id);
   const next = hasTest ? (Course.diagnosticPassed(state.learning,id) ? '自测已通过 · 下一步可做实作' : '下一步 · 独立自测') : '下一步 · 起点自测待开放';
@@ -122,11 +134,28 @@ function initMap() {
   });
   new ResizeObserver(scheduleGraph).observe(byId('graph'));
 }
+function renderPhilosophyHome() {
+  const quick = state.philosophyQuick;
+  const units = window.PHILOSOPHY_QUICK;
+  const next = PhilosophyExperience.suggested(quick,state.learning);
+  const startLink = byId('atlas-start');
+  startLink.href = PhilosophyExperience.url('experience',next.id);
+  startLink.textContent = PhilosophyExperience.hasStarted(quick) ? '继续学哲学' : '开始哲学第一课';
+  const marks = ['≠','◇','∥'];
+  byId('atlas-philosophy-lessons').innerHTML = units.map((unit,index) => {
+    const progress = PhilosophyExperience.progress(unit,quick,state.learning);
+    return '<a class="atlas-lesson-card" href="' + PhilosophyExperience.url('experience',unit.id) + '">' +
+      '<span class="atlas-lesson-mark" aria-hidden="true">' + marks[index] + '</span>' +
+      '<div class="atlas-lesson-copy"><h3>' + escapeHTML(unit.title) + '</h3><p>' + escapeHTML(unit.hook) + '</p></div>' +
+      '<div class="atlas-lesson-foot"><span>' + unit.minutes + ' 分钟' +
+      (progress === '待开始' ? '' : ' · ' + escapeHTML(progress)) + '</span><span aria-hidden="true">＋</span></div></a>';
+  }).join('');
+}
 function renderOverview() {
+  renderPhilosophyHome();
   const started = data.disciplines.filter(d => stageFor(d.id) > 0).length;
   const completed = data.disciplines.filter(d => stageFor(d.id) === 3).length;
   const count = data.disciplines.length;
-  byId('stats-home').innerHTML = StatsExperience.entry(state.quick,state.learning,true);
   byId('overview').innerHTML = '<div class="progress-label"><span>已开始</span><strong>' + started + ' / ' + count + ' 门</strong></div><progress aria-label="已开始的学科" max="' + count + '" value="' + started + '"></progress><div class="progress-label"><span>达到目标深度</span><strong>' + completed + ' 门</strong></div>';
 }
 function linkedTo(id) {
@@ -225,8 +254,9 @@ function drawGraph() {
 }
 function renderRoute() {
   const section = byId('route-content');
-  section.innerHTML = StatsExperience.entry(state.quick,state.learning,true) +
-    '<details class="stats-scope"><summary>原有路线和企鹅数据项目</summary><div class="roadmap-grid">' + data.roadmap.map((item, i) =>
+  section.innerHTML = PhilosophyExperience.entry(state.philosophyQuick,state.learning,true) +
+    '<section class="atlas-section atlas-route-stats"><div class="atlas-section-heading"><h2>继续探索</h2><a class="soft" href="#course/stats/overview">打开统计与因果推断</a></div></section>' +
+    '<details class="stats-scope"><summary>统计进阶 · 企鹅数据项目和原有课程</summary><div class="roadmap-grid">' + data.roadmap.map((item, i) =>
     '<article class="card' + (i === 0 ? ' highlight' : '') + '"><h3>' + escapeHTML(item.title) + '</h3><p class="timing">' + escapeHTML(item.timing) + '</p><p>' + escapeHTML(item.description) + '</p><ul>' + item.items.map(text => '<li>' + escapeHTML(text) + '</li>').join('') + '</ul>' +
     (i === 0 ? '<p><button type="button" class="soft" id="start-trial">查看原有课程与项目</button></p>' : '') + '</article>').join('') + '</div></details>' +
     '<h2 class="section-title">起点校准</h2><div class="card-stack">' + data.diagnostic.map(entry =>
@@ -364,7 +394,10 @@ function initNotes() {
         if (!state.progress[id] || progress.updated > state.progress[id].updated) state.progress[id] = progress;
       }
       state.learning = Course.merge(state.learning,incoming.learning);
-      state.quick = StatsExperience.merge(state.quick,incoming.quick);
+      for (const [id,experience] of experiences) {
+        const key = quickStateKey(id);
+        state[key] = experience.merge(state[key],incoming[key]);
+      }
       saveWithNotice('已合并笔记、进度和答题记录');
       renderNotes();
       renderOverview();
@@ -394,34 +427,42 @@ function switchView() {
   }
   if (hash !== 'main') window.scrollTo(0,0);
   if (active === 'course') {
-    if ((!discipline || discipline === 'stats') && (!step || StatsExperience.views.includes(step))) {
-      StatsExperience.render(step ?? 'overview',item);
-    } else {
-      Course.render(discipline,step);
-    }
+    const subject = discipline || 'philosophy';
+    const experience = experiences.get(subject);
+    if (experience && (!step || experience.views.includes(step))) experience.render(step ?? 'overview',item);
+    else Course.render(subject,step);
   }
   if (active === 'route') renderRoute();
-  if (active === 'map') scheduleGraph();
+  if (active === 'map') {
+    scheduleGraph();
+    if (discipline === 'disciplines') {
+      const heading = byId('disciplines-heading');
+      heading.focus({preventScroll:true});
+      heading.scrollIntoView({block:'start'});
+    }
+  }
 }
 function commitLearning(message) {
   saveWithNotice(message);
   renderOverview();
   renderNodes();
   renderDetail();
-  StatsExperience.updateProgress();
+  for (const experience of experiences.values()) experience.updateProgress();
 }
 Course.configure(byId('page-course'),{
   model:() => state.learning,
-  extraReport:() => StatsExperience.report(state.quick),
+  extraReport:() => [...experiences].flatMap(([id,experience]) => experience.report(state[quickStateKey(id)])),
   save,
   commit:commitLearning
 });
-StatsExperience.configure(byId('page-course'),{
-  model:() => state.quick,
-  learning:() => state.learning,
-  commit:commitLearning,
-  note:(title,href) => newNote('stats','生活应用 · ' + title,'下一步',new URL(href,location.href).href)
-});
+for (const [id,experience] of experiences) {
+  experience.configure(byId('page-course'),{
+    model:() => state[quickStateKey(id)],
+    learning:() => state.learning,
+    commit:commitLearning,
+    note:(title,href) => newNote(id,'生活应用 · ' + title,'下一步',new URL(href,location.href).href)
+  });
+}
 initMap();
 initNotes();
 renderOverview();

@@ -4,11 +4,16 @@ window.Course = (() => {
   const lessons = window.STATS_LESSONS;
   const transfer = window.STATS_TRANSFER;
   const practice = lessons.flatMap(item => item.exercises);
-  const quickTasks = window.STATS_QUICK.map(unit => ({
-    ...unit.transfer, id:'quick-' + unit.id, title:'独立迁移 · ' + unit.title,
+  const subjects = [
+    {prefix:'',units:window.STATS_QUICK,atlas:window.STATS_MAP},
+    {prefix:'philosophy-',units:window.PHILOSOPHY_QUICK,atlas:window.PHILOSOPHY_MAP}
+  ];
+  const quickTasks = subjects.flatMap(({prefix,units}) => units.map(unit => ({
+    ...unit.transfer, id:'quick-' + prefix + unit.id, title:'独立迁移 · ' + unit.title,
     misstep:unit.transfer.misstep || unit.limit
-  }));
-  const benchmarkTasks = Object.entries(window.STATS_MAP.benchmark).map(([kind,task]) => ({...task,id:'benchmark-' + kind}));
+  })));
+  const benchmarkTasks = subjects.flatMap(({prefix,atlas}) =>
+    Object.entries(atlas.benchmark).map(([kind,task]) => ({...task,id:'benchmark-' + prefix + kind})));
   const tasks = new Map([...practice, transfer, ...syllabus.diagnostics, ...quickTasks, ...benchmarkTasks].map(task => [task.id, task]));
   const lessonIds = new Set(lessons.map(lesson => lesson.id));
   const knownVariants = new Set(['main', 'retry']);

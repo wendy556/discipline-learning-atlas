@@ -4,19 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="探索学科之间的关系，记录跨学科学习进度与思考。">
-  <meta name="theme-color" content="#f5f6f8">
+  <meta name="theme-color" content="#f5f5f7">
   <title>学科地图</title>
   <link rel="stylesheet" href="./style.css">
   <script defer src="./content.js"></script>
   <link rel="stylesheet" href="./course.css">
-  <link rel="stylesheet" href="./stats-experience.css?v=stats-capabilities-1">
+  <link rel="stylesheet" href="./stats-experience.css?v=philosophy-editorial-1">
+  <link rel="stylesheet" href="./editorial.css?v=philosophy-editorial-1">
   <script defer src="./curriculum.js"></script>
   <script defer src="./stats-lessons.js"></script>
-  <script defer src="./stats-map.js?v=stats-capabilities-1"></script>
-  <script defer src="./stats-quick.js?v=stats-capabilities-1"></script>
-  <script defer src="./course.js?v=stats-capabilities-1"></script>
-  <script defer src="./stats-experience.js?v=stats-capabilities-1"></script>
-  <script defer src="./app.js?v=stats-capabilities-1"></script>
+  <script defer src="./stats-map.js?v=philosophy-editorial-1"></script>
+  <script defer src="./stats-quick.js?v=philosophy-editorial-1"></script>
+  <script defer src="./philosophy-map.js?v=philosophy-editorial-1"></script>
+  <script defer src="./philosophy-quick.js?v=philosophy-editorial-1"></script>
+  <script defer src="./course.js?v=philosophy-editorial-1"></script>
+  <script defer src="./stats-experience.js?v=philosophy-editorial-1"></script>
+  <script defer src="./app.js?v=philosophy-editorial-1"></script>
 </head>
 <body>
   <a class="skip" href="#main">跳到内容</a>
@@ -24,9 +27,9 @@
     <div class="top-inner">
       <a class="wordmark" href="#map" aria-label="学科地图首页"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>学科地图</a>
       <nav aria-label="学习地图导航">
-        <a href="#map" data-view="map">学科地图</a>
+        <a href="#map/disciplines" data-view="map">学科地图</a>
         <a href="#route" data-view="route">学习路线</a>
-        <a href="#course/stats/overview" data-view="course">课程</a>
+        <a href="#course/philosophy/overview" data-view="course">哲学课程</a>
         <a href="#ai" data-view="ai">AI 协作</a>
         <a href="#notes" data-view="notes">学习记录</a>
       </nav>
@@ -34,11 +37,27 @@
   </header>
   <main class="shell" id="main" tabindex="-1">
     <section id="page-map" aria-labelledby="map-heading">
-      <div class="intro">
-        <div><h1 id="map-heading">跨学科学习地图</h1><p>用不同学科的方法观察同一个问题，记录你的发现与进度。</p></div>
-        <div class="progress-overview" id="overview" aria-label="总体学习进度"></div>
+      <div class="atlas-hero">
+        <img class="atlas-hero-picture" src="./philosophy-hero.webp" alt="" width="1440" height="960" fetchpriority="high">
+        <div class="atlas-hero-inner">
+          <p class="atlas-overline">哲学</p>
+          <h1 class="atlas-hero-title" id="map-heading"><span>想清楚，</span><span>再下判断。</span></h1>
+          <p class="atlas-hero-lead">从每天遇到的分歧出发，练习把事实、价值判断和理由分开。</p>
+          <div class="atlas-actions">
+            <a class="atlas-primary" id="atlas-start" href="#course/philosophy/experience/claims">开始哲学第一课</a>
+            <a class="atlas-secondary" href="#course/philosophy/map">查看哲学能力全图</a>
+          </div>
+        </div>
       </div>
-      <div id="stats-home"></div>
+      <section class="atlas-section" aria-labelledby="philosophy-start-heading">
+        <div class="atlas-section-heading"><h2 id="philosophy-start-heading">从日常判断开始</h2><a class="text-button" href="#course/philosophy/overview">查看哲学课程</a></div>
+        <div class="atlas-lessons" id="atlas-philosophy-lessons"></div>
+      </section>
+      <section class="atlas-section atlas-map-section" aria-labelledby="disciplines-heading">
+        <div class="atlas-section-heading">
+          <div><h2 id="disciplines-heading" tabindex="-1">探索学科地图</h2><p>选一门学科，看看它如何改变同一个问题。</p></div>
+          <div class="progress-overview" id="overview" aria-label="总体学习进度"></div>
+        </div>
       <section class="workspace" aria-label="互动学科地图">
         <div class="canvas-panel">
           <div class="map-toolbar">
@@ -55,6 +74,7 @@
         <aside class="detail" aria-label="学科详情" id="detail"></aside>
       </section>
       <details class="source-list"><summary>学科分类与课程参考</summary><ul id="map-sources"></ul></details>
+      </section>
     </section>
     <section id="page-route" class="secondary-view" aria-labelledby="route-heading" hidden>
       <div class="intro"><div><h1 id="route-heading">学习路线</h1><p>先完成一次快速体验，再按能力全图挑下一项。</p></div></div>
