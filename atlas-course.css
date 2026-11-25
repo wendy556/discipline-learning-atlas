@@ -6,6 +6,7 @@
   --course-active: #e5eee8;
   --course-paper: #fffefa;
   --course-radius: .875rem;
+  --course-reading-width: 46rem;
   --reading-gap: clamp(1.5rem, 3.1vw, 2.75rem);
   max-width: none;
 }
@@ -109,6 +110,7 @@
 }
 .atlas-lesson-header {
   display: flex;
+  max-width: var(--course-reading-width);
   align-items: end;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -137,21 +139,31 @@
   font-weight: 620;
 }
 
-#page-course .stats-quick.atlas-lesson-grid,
-#page-course .atlas-lesson-followup {
-  display: grid;
-  grid-template-columns: minmax(0, 1.16fr) minmax(19rem, .92fr);
-  column-gap: var(--reading-gap);
-  row-gap: 1.65rem;
-  align-items: start;
+#page-course .stats-quick.atlas-lesson-flow {
   width: 100%;
-  min-width: 0;
+  max-width: var(--course-reading-width);
+  gap: 1.2rem;
   margin: 0;
 }
-.atlas-lesson-grid > :is(.stats-takeaway, .atlas-lesson-followup, .stats-step-nav) { grid-column: 1 / -1; }
-.atlas-lesson-grid > :is(#stats-question-box, #stats-experiment-box) { min-width: 0; }
+.atlas-step-progress {
+  color: var(--course-accent);
+  font-size: .85rem;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+}
+.atlas-step-panels,
+.atlas-step-panel { min-width: 0; }
+.atlas-step-panel { display: grid; gap: 1rem; }
+.atlas-step-panel h2 { scroll-margin-block-start: 7rem; }
+.atlas-step-panel h2:focus { outline: none; }
+.atlas-step-hint {
+  flex: 1 0 100%;
+  color: var(--muted);
+  font-size: .875rem;
+  line-height: 1.5;
+}
 
-#page-course .atlas-lesson-grid :is(.stats-quick-section, .stats-life) {
+#page-course .atlas-lesson-flow :is(.stats-quick-section, .stats-life) {
   min-width: 0;
   align-content: start;
   gap: .72rem;
@@ -161,7 +173,7 @@
   background: transparent;
   scroll-margin-block-start: 5rem;
 }
-#page-course .atlas-lesson-grid .atlas-lesson-contrast {
+#page-course .atlas-lesson-flow .atlas-lesson-contrast {
   gap: .62rem;
   padding: clamp(1rem, 1.7vw, 1.45rem);
   border: 1px solid #d9e3da;
@@ -176,32 +188,38 @@
   font-weight: 680;
   letter-spacing: .025em;
 }
-.atlas-lesson-grid :is(.stats-quick-section, .stats-life, .stats-takeaway) h2 {
+.atlas-lesson-flow :is(.stats-quick-section, .stats-life, .stats-takeaway) h2 {
   font-size: clamp(1.125rem, 1.5vw, 1.325rem);
   font-weight: 700;
   letter-spacing: -.014em;
   line-height: 1.48;
   text-wrap: wrap;
 }
-.atlas-lesson-grid .atlas-lesson-contrast h2 { font-size: 1.125rem; }
-.atlas-lesson-grid :is(.stats-quick-section, .stats-life, .stats-takeaway) p {
+.atlas-lesson-flow .atlas-lesson-contrast h2 { font-size: 1.125rem; }
+.atlas-lesson-flow :is(.stats-quick-section, .stats-life, .stats-takeaway) p {
   font-size: .96rem;
   line-height: 1.66;
 }
-.atlas-lesson-grid .atlas-lesson-contrast p { font-size: .89rem; line-height: 1.58; }
-.atlas-lesson-grid .atlas-lesson-scenario { color: var(--muted); }
+.atlas-lesson-flow .atlas-lesson-contrast p { font-size: .89rem; line-height: 1.58; }
+.atlas-lesson-flow .atlas-lesson-scenario { color: var(--muted); }
 
-.atlas-lesson-grid .stats-question-choices {
+.atlas-answer-form { display: grid; gap: 1rem; }
+.atlas-answer-action { display: flex; }
+.atlas-answer-form .atlas-answer-action { justify-content: flex-end; }
+.atlas-lesson-flow .stats-question-choices {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
   gap: 0;
   overflow: clip;
   border: 1px solid var(--course-rule);
   border-radius: var(--course-radius);
   background: var(--course-paper);
 }
-.atlas-lesson-grid .stats-option {
+.atlas-lesson-flow .stats-option {
   display: grid;
   grid-template-columns: 1.08rem minmax(0, 1fr);
-  gap: .7rem;
+  gap: .75rem;
   align-items: center;
   min-height: 3rem;
   padding: .63rem .95rem;
@@ -211,43 +229,30 @@
   box-shadow: none;
   font-size: .96rem;
   line-height: 1.5;
+  cursor: pointer;
 }
-.atlas-lesson-grid .stats-option + .stats-option { border-top: 1px solid var(--course-rule); }
-.atlas-lesson-grid .stats-option::before {
-  content: "";
+.atlas-lesson-flow .stats-option + .stats-option { border-top: 1px solid var(--course-rule); }
+.atlas-lesson-flow .stats-option > input {
   width: 1rem;
   height: 1rem;
-  border: 1px solid #85958e;
-  border-radius: 50%;
+  margin: 0;
+  accent-color: var(--course-accent);
+  cursor: inherit;
 }
-.atlas-lesson-grid .stats-option:hover { background: #f0f4ed; }
-.atlas-lesson-grid .stats-option[aria-pressed="true"] { background: var(--course-active); color: var(--course-active-ink); box-shadow: none; }
-.atlas-lesson-grid .stats-option[aria-pressed="true"]::before {
-  border-color: var(--course-accent);
-  background: var(--course-accent);
-  box-shadow: inset 0 0 0 .22rem var(--course-active);
-}
-.atlas-lesson-grid .stats-option:focus-visible {
-  position: relative;
-  z-index: 1;
+.atlas-lesson-flow .stats-option:has(input:enabled):hover { background: #f0f4ed; }
+.atlas-lesson-flow .stats-option:has(input:checked) { background: var(--course-active); color: var(--course-active-ink); }
+.atlas-lesson-flow .stats-option:has(input:disabled) { cursor: default; }
+.atlas-lesson-flow .stats-option > input:focus-visible {
   outline: 2px solid var(--course-accent);
-  outline-offset: -3px;
+  outline-offset: 3px;
 }
-.atlas-lesson-grid .stats-feedback { padding: .72rem .85rem; border-radius: .62rem; }
-.atlas-lesson-grid .stats-feedback > strong { font-size: .9rem; }
-.atlas-lesson-grid .stats-feedback .stats-stage {
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-size: .79rem;
-}
-.atlas-lesson-grid .stats-history { padding-top: .55rem; }
-.atlas-lesson-grid .stats-history summary { min-height: 1.8rem; color: var(--muted); font-size: .85rem; }
-.atlas-lesson-grid .stats-history ol { margin: .35rem 0 .15rem; padding-inline-start: 1.3rem; }
+.atlas-lesson-flow .stats-feedback { padding: .72rem .85rem; border-radius: .62rem; }
+.atlas-lesson-flow .stats-feedback > strong { font-size: .9rem; }
+.atlas-lesson-flow .stats-history { padding-top: .55rem; }
+.atlas-lesson-flow .stats-history summary { min-height: 1.8rem; color: var(--muted); font-size: .85rem; }
+.atlas-lesson-flow .stats-history ol { margin: .35rem 0 .15rem; padding-inline-start: 1.3rem; }
 
-.atlas-lesson-grid .stats-experiment-tabs {
+.atlas-lesson-flow .stats-experiment-tabs {
   gap: .2rem;
   padding: .23rem;
   border-color: #d9e3da;
@@ -255,7 +260,7 @@
   background: #e3ebe3;
   width: 100%;
 }
-.atlas-lesson-grid .stats-experiment-tabs > button {
+.atlas-lesson-flow .stats-experiment-tabs > button {
   flex: 1 1 min(100%, 7rem);
   min-height: 2.5rem;
   padding: .33rem .47rem;
@@ -264,8 +269,8 @@
   font-size: .85rem;
   text-align: center;
 }
-.atlas-lesson-grid .stats-experiment-tabs > button:hover { background: #f1f6ee; color: var(--course-active-ink); }
-.atlas-lesson-grid .stats-experiment-tabs > [aria-pressed="true"] {
+.atlas-lesson-flow .stats-experiment-tabs > button:hover { background: #f1f6ee; color: var(--course-active-ink); }
+.atlas-lesson-flow .stats-experiment-tabs > [aria-pressed="true"] {
   border-color: #cfdbd2;
   background: var(--course-paper);
   color: var(--course-active-ink);
@@ -280,7 +285,7 @@
 }
 .atlas-contrast-list { gap: 0; margin: 0; }
 .atlas-contrast-list > div,
-.atlas-lesson-grid .stats-experiment-summary {
+.atlas-lesson-flow .stats-experiment-summary {
   display: grid;
   grid-template-columns: minmax(4em, max-content) minmax(0, 1fr);
   gap: .5rem;
@@ -288,24 +293,24 @@
   margin: 0;
 }
 .atlas-contrast-list > div + div,
-.atlas-lesson-grid .stats-experiment-summary { border-top: 1px solid var(--course-rule); }
+.atlas-lesson-flow .stats-experiment-summary { border-top: 1px solid var(--course-rule); }
 .atlas-contrast-list dt,
-.atlas-lesson-grid .stats-experiment-summary > strong {
+.atlas-lesson-flow .stats-experiment-summary > strong {
   color: var(--course-accent);
   font-size: .8rem;
   line-height: 1.6;
   font-weight: 670;
 }
 .atlas-contrast-list dd { margin: 0; color: var(--ink); font-size: .87rem; line-height: 1.6; }
-.atlas-lesson-grid .stats-experiment-summary { color: var(--ink); }
-.atlas-lesson-grid .stats-bars { gap: .52rem; padding: .62rem 0; border: 0; background: transparent; font-size: .84rem; }
-.atlas-lesson-grid .stats-meter { height: .35rem; background: #e1e9e0; }
-.atlas-lesson-grid .stats-meter > span { background: #438474; }
+.atlas-lesson-flow .stats-experiment-summary { color: var(--ink); }
+.atlas-lesson-flow .stats-bars { gap: .52rem; padding: .62rem 0; border: 0; background: transparent; font-size: .84rem; }
+.atlas-lesson-flow .stats-meter { height: .35rem; background: #e1e9e0; }
+.atlas-lesson-flow .stats-meter > span { background: #438474; }
 .atlas-experiment-note { font-size: .8rem; line-height: 1.5; color: var(--muted); }
 .atlas-experiment-note summary { width: fit-content; color: var(--course-accent); padding: .15rem 0; }
 .atlas-experiment-note p { margin: .4rem 0 0; }
 
-.atlas-lesson-grid .stats-takeaway {
+.atlas-lesson-flow .stats-takeaway {
   gap: .35rem;
   padding: .85rem 1rem .9rem;
   border: 0;
@@ -314,13 +319,16 @@
   background: #ebf0e8;
   color: var(--ink);
 }
-.atlas-lesson-grid .stats-takeaway strong { color: var(--course-active-ink); }
-#page-course .atlas-lesson-followup :is(.atlas-lesson-practice, .atlas-lesson-transfer) {
+.atlas-lesson-flow .stats-takeaway strong { color: var(--course-active-ink); }
+.atlas-lesson-flow .stats-quick-section textarea { min-height: 5.5rem; font-size: .96rem; }
+.atlas-lesson-flow .atlas-step-actions {
+  align-items: center;
+  justify-content: flex-start;
+  gap: .6rem .85rem;
   padding-top: 1rem;
   border-top: 1px solid var(--course-rule);
 }
-.atlas-lesson-grid .stats-quick-section textarea { min-height: 5.5rem; font-size: .96rem; }
-.atlas-lesson-grid .stats-step-nav { justify-content: flex-end; padding-top: .5rem; }
+.atlas-step-actions > .primary { margin-inline-start: auto; }
 
 /* The syllabus and capability index use lists, with a separate detail surface. */
 #page-course .stats-section { margin-block: 0 1.8rem; gap: .9rem; }
@@ -416,11 +424,9 @@
 }
 
 @media (max-width: 43rem) {
-  #page-course .stats-quick.atlas-lesson-grid,
-  #page-course .atlas-lesson-followup,
   #page-course .atlas-course-overview-links { grid-template-columns: minmax(0, 1fr); }
   #page-course :is(.course-intro, .atlas-lesson-header) { margin-bottom: 1.15rem; }
   #page-course a.stats-launch-card { grid-template-columns: minmax(0, 1fr); }
-  .atlas-lesson-grid .stats-option,
-  .atlas-lesson-grid .stats-experiment-tabs > button { min-height: 2.75rem; }
+  .atlas-lesson-flow .stats-option,
+  .atlas-lesson-flow .stats-experiment-tabs > button { min-height: 2.75rem; }
 }

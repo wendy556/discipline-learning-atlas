@@ -15,8 +15,6 @@ function createLearningExperience({id,name,lead,units,atlas}) {
   const empty = () => ({choices:{}});
   let el;
   let adapter;
-  const selectedExperiments = new Map();
-  const openHistory = new Set();
   const model = () => adapter.model();
   const learning = () => adapter.learning();
 
@@ -162,97 +160,182 @@ function createLearningExperience({id,name,lead,units,atlas}) {
     el.querySelector('#stats-benchmark-exercise').append(Course.exercise(benchmarkId(kind),{independent:true}));
   }
 
-  function questionBox(unit) {
+  function questionBox(unit, attempt, historyOpen) {
     const entries = model().choices[unit.id] || [];
-    const selected = entries.at(-1)?.choice;
-    const current = unit.question.choices.find(choice => choice.id === selected);
-    const good = selected === unit.question.correct;
+    const current = unit.question.choices.find(choice => choice.id === attempt?.choice);
+    const good = current?.id === unit.question.correct;
     return '<section class="stats-quick-section atlas-lesson-prediction" aria-labelledby="stats-predict">' +
-      '<span class="atlas-lesson-label">先做判断</span><p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict">' +
-      safe(unit.question.prompt) + '</h2><div class="stats-question-choices" role="group" aria-label="选择你的判断">' +
-      unit.question.choices.map(choice => '<button class="stats-option" data-choice="' + safe(choice.id) + '" type="button" aria-pressed="' +
-        (selected === choice.id) + '"><span>' + safe(choice.label) + '</span></button>').join('') + '</div>' +
-      '<div id="stats-feedback" tabindex="-1" role="status" aria-live="polite"' +
-      (current ? ' class="stats-feedback ' + (good ? 'is-correct' : 'is-retry') + '"><strong>' + (good ? '这个判断有依据' : '再试一次') +
-        '</strong><p>' + safe(current.feedback) + '</p><span class="stats-stage">第 ' + entries.length + ' 次判断</span>' : ' hidden>') +
-      '</div>' +
-      (entries.length ? '<details class="stats-history"' + (openHistory.has(unit.id) ? ' open' : '') + '><summary>判断记录 · ' +
+      '<p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict" tabindex="-1">' +
+      safe(unit.question.prompt) + '</h2><form class="atlas-answer-form" autocomplete="off" aria-labelledby="stats-predict">' +
+      '<div class="stats-question-choices" role="group" aria-label="选择你的判断">' +
+      unit.question.choices.map(choice => '<label class="stats-option"><input name="lesson-answer" type="radio" value="' + safe(choice.id) + '"' +
+        (current?.id === choice.id ? ' checked' : '') + (current ? ' disabled' : '') + '><span>' + safe(choice.label) + '</span></label>').join('') + '</div>' +
+      (current ? '</form><div id="stats-feedback" tabindex="-1" role="status" class="stats-feedback ' + (good ? 'is-correct' : 'is-retry') +
+        '"><strong>' + (good ? '这个判断有依据' : '这个判断还缺一步') + '</strong><p>' + safe(current.feedback) + '</p></div>' +
+        '<div class="atlas-answer-action"><button class="soft" type="button" id="atlas-retry-answer">重新作答</button></div>' :
+        '<div class="atlas-answer-action"><button class="primary" type="submit" disabled>提交判断</button></div></form>') +
+      (entries.length ? '<details class="stats-history"' + (historyOpen ? ' open' : '') + '><summary>判断记录 · ' +
         entries.length + ' 次</summary><ol>' + entries.map(item => {
           const choice = unit.question.choices.find(c => c.id === item.choice);
           return '<li><span>' + safe(choice.label) + '</span><small>' + safe(timeLabel(item.at)) +
             ' · ' + (item.choice === unit.question.correct ? '识别了' : '待复练') + '</small></li>';
         }).join('') + '</ol></details>' : '') + '</section>';
   }
-  function experimentBox(unit) {
+  function experimentBox(unit, choice) {
     const test = unit.experiment;
-    const choice = test.variants.find(v => v.id === selectedExperiments.get(unit.id)) ?? test.variants[0];
-    const metrics = choice.rows.every(row => Number.isFinite(row.value));
-    const comparison = metrics
+    const comparison = !choice ? '' : choice.rows.every(row => Number.isFinite(row.value))
       ? '<div class="stats-bars">' + choice.rows.map(row => '<div class="stats-bar"><span>' + safe(row.label) + '</span><strong>' + safe(row.text) +
         '</strong><div class="stats-meter" aria-hidden="true"><span style="width:' + Math.min(100,Math.max(0,row.value)) + '%"></span></div></div>').join('') + '</div>'
       : '<dl class="atlas-contrast-list">' + choice.rows.map(row => '<div><dt>' + safe(row.label) + '</dt><dd>' + safe(row.text) + '</dd></div>').join('') + '</dl>';
     return '<section class="stats-quick-section atlas-lesson-contrast" aria-labelledby="stats-compare">' +
-      '<span class="atlas-lesson-label">对照实验 · 示意</span><h2 id="stats-compare">' +
+      '<span class="atlas-lesson-label">对照实验 · 示意</span><h2 id="stats-compare" tabindex="-1">' +
       safe(test.title) + '</h2><p>' + safe(test.description) + '</p><div class="stats-experiment-tabs" role="group" aria-label="切换对照条件">' +
       test.variants.map(variant => '<button type="button" class="soft" data-variant="' + safe(variant.id) + '" aria-pressed="' +
-        (choice.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div>' +
-      '<div class="atlas-experiment-reading" aria-live="polite">' + comparison + '<p class="stats-experiment-summary"><strong>结果</strong><span>' +
-      safe(choice.summary) + '</span></p></div><details class="atlas-experiment-note"><summary>怎么解读这个对照</summary><p>' +
-      safe(test.takeaway) + '</p></details></section>';
+        (choice?.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div>' +
+      (choice ? '<div class="atlas-experiment-reading" aria-live="polite">' + comparison + '<p class="stats-experiment-summary"><strong>结果</strong><span>' +
+        safe(choice.summary) + '</span></p></div>' : '<p class="atlas-experiment-prompt">选一个条件查看结果。</p>') + '</section>';
   }
   function renderQuick(id) {
     const unit = byUnit.get(id) ?? units[0];
-    const index = units.indexOf(unit);
-    const next = units[index + 1];
+    const lessonIndex = units.indexOf(unit);
+    const nextLesson = units[lessonIndex + 1];
     const module = atlas.modules.find(item => item.experience === unit.id);
+    const finish = nextLesson ? ['下一课', url('experience',nextLesson.id)] : ['查看能力全图', url('map')];
+    const viewedConditions = new Set();
+    let submitted = null;
+    let stepIndex = 0;
+    const steps = [
+      {title:'先做判断', next:'看对照实验', mount:mountJudgment},
+      {title:'观察对照', next:'看知识点', mount:mountExperiment},
+      {title:'提炼思维', next:'做迁移练习', mount:mountTakeaway},
+      {title:'独立迁移', next:'看生活应用', mount:mountTransfer},
+      {title:'用到生活里', mount:mountApplication}
+    ];
+
     el.innerHTML = adapter.shell('<header class="atlas-lesson-header"><div class="atlas-lesson-heading">' +
-      '<p class="atlas-lesson-breadcrumb">第 ' + (index + 1) + ' 节 · ' + unit.minutes + ' 分钟</p>' +
+      '<p class="atlas-lesson-breadcrumb">第 ' + (lessonIndex + 1) + ' 节 · ' + unit.minutes + ' 分钟</p>' +
       '<h1 id="course-heading">' + safe(unit.title) + '</h1></div>' +
       '<div class="atlas-lesson-meta"><span id="stats-quick-status">' + stageTag(progress(unit,model(),learning())) +
       '</span><a href="' + url('map',module?.id) + '">对应能力</a></div></header>' +
-      '<div class="stats-quick atlas-lesson-grid">' +
-      '<div id="stats-question-box"></div><div id="stats-experiment-box"></div>' +
-      '<section class="stats-takeaway"><span class="atlas-lesson-label">记住这个问法</span><h2>' + safe(unit.thought) + '</h2><p>' +
-      '<strong>适用边界</strong> · ' + safe(unit.limit) + '</p></section>' +
-      '<div class="atlas-lesson-followup"><section class="stats-quick-section atlas-lesson-transfer" aria-labelledby="stats-transfer">' +
-      '<h2 id="stats-transfer">独立迁移</h2><p>先写判断和依据，再对照评分。首次作答通过可记录为能独立迁移。</p>' +
-      '<div id="stats-quick-transfer"></div></section>' +
-      '<section class="stats-life atlas-lesson-practice"><h2>今天就用</h2><p>' + safe(unit.life.prompt) +
-      '</p><p class="course-meta">' + safe(unit.life.example) + '</p><button type="button" class="soft" id="stats-life-note">记下我的生活应用</button></section></div>' +
-      '<div class="stats-step-nav">' +
-      (next ? '<a class="primary" href="' + url('experience',next.id) + '">下一课</a>' :
-        '<a class="primary" href="' + url('map') + '">查看能力全图</a>') + '</div></div>', 'experience', unit.id);
-    const question = el.querySelector('#stats-question-box');
-    const experiment = el.querySelector('#stats-experiment-box');
-    function updateQuestion(focus = false) {
-      question.innerHTML = questionBox(unit);
-      question.querySelector('details')?.addEventListener('toggle', event => {
-        if (event.currentTarget.open) openHistory.add(unit.id);
-        else openHistory.delete(unit.id);
-      });
-      question.querySelectorAll('[data-choice]').forEach(button => button.addEventListener('click',() => {
-        const uid = globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
-        const entries = model().choices[unit.id] ?? (model().choices[unit.id] = []);
-        entries.push({id:uid,choice:button.dataset.choice,at:new Date().toISOString()});
-        adapter.commit('已保存本次判断');
-        updateQuestion(true);
-      }));
-      if (focus) question.querySelector('#stats-feedback').focus({preventScroll:true});
+      '<div class="stats-quick atlas-lesson-flow"><p class="atlas-step-progress"></p><div class="atlas-step-panels"></div>' +
+      '<div class="stats-step-nav atlas-step-actions" hidden><p class="atlas-step-hint" hidden>分别查看两种条件的结果，再继续。</p>' +
+      '<button class="soft" type="button" id="atlas-step-back">上一步</button>' +
+      '<button class="primary" type="button" id="atlas-step-next"></button>' +
+      '<a class="primary" id="atlas-step-finish" href="' + finish[1] + '" hidden>' + finish[0] + '</a></div></div>', 'experience', unit.id);
+
+    const panels = el.querySelector('.atlas-step-panels');
+    const indicator = el.querySelector('.atlas-step-progress');
+    const actions = el.querySelector('.atlas-step-actions');
+    const previous = el.querySelector('#atlas-step-back');
+    const advance = el.querySelector('#atlas-step-next');
+    const finishLink = el.querySelector('#atlas-step-finish');
+    const hint = el.querySelector('.atlas-step-hint');
+
+    function refreshActions() {
+      const first = stepIndex === 0;
+      const last = stepIndex === steps.length - 1;
+      const awaitingContrast = stepIndex === 1 && viewedConditions.size < unit.experiment.variants.length;
+      actions.hidden = first && !submitted;
+      previous.hidden = first;
+      advance.hidden = last;
+      advance.disabled = awaitingContrast;
+      advance.textContent = steps[stepIndex].next ?? '';
+      finishLink.hidden = !last;
+      hint.hidden = !awaitingContrast;
     }
-    function updateExperiment(focusId) {
-      experiment.innerHTML = experimentBox(unit);
-      experiment.querySelectorAll('[data-variant]').forEach(button => {
-        button.addEventListener('click',() => {
-          selectedExperiments.set(unit.id,button.dataset.variant);
-          updateExperiment(button.dataset.variant);
+
+    function showStep(index, focus = true) {
+      if (steps[stepIndex].panel) steps[stepIndex].panel.hidden = true;
+      stepIndex = index;
+      const step = steps[index];
+      if (!step.panel) {
+        step.panel = document.createElement('div');
+        step.panel.className = 'atlas-step-panel';
+        step.mount(step.panel);
+        panels.append(step.panel);
+      }
+      step.panel.hidden = false;
+      indicator.textContent = '第 ' + (index + 1) + ' / ' + steps.length + ' 步 · ' + step.title;
+      refreshActions();
+      if (focus) {
+        step.panel.querySelector('h2').focus({preventScroll:true});
+        window.scrollTo(0,0);
+      }
+    }
+
+    function mountJudgment(panel) {
+      function draw() {
+        const historyOpen = panel.querySelector('.stats-history')?.open;
+        panel.innerHTML = questionBox(unit,submitted,historyOpen);
+        if (submitted) {
+          panel.querySelector('#atlas-retry-answer').addEventListener('click',() => {
+            submitted = null;
+            draw();
+            refreshActions();
+            panel.querySelector('input[name="lesson-answer"]').focus();
+          });
+          return;
+        }
+        const form = panel.querySelector('form');
+        const submit = form.querySelector('button[type="submit"]');
+        form.addEventListener('change',() => {
+          submit.disabled = false;
         });
-        if (button.dataset.variant === focusId) button.focus({preventScroll:true});
-      });
+        form.addEventListener('submit',event => {
+          event.preventDefault();
+          const choice = form.querySelector('input[name="lesson-answer"]:checked')?.value;
+          if (!choice || submitted) return;
+          const uid = globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+          submitted = {id:uid,choice,at:new Date().toISOString()};
+          const entries = model().choices[unit.id] ?? (model().choices[unit.id] = []);
+          entries.push(submitted);
+          adapter.commit('已保存本次判断');
+          draw();
+          refreshActions();
+          panel.querySelector('#stats-feedback').focus();
+        });
+      }
+      draw();
     }
-    updateQuestion();
-    updateExperiment();
-    el.querySelector('#stats-quick-transfer').append(Course.exercise(taskId(unit.id),{independent:true}));
-    el.querySelector('#stats-life-note').addEventListener('click',() => adapter.note(unit.title,url('experience',unit.id)));
+
+    function mountExperiment(panel) {
+      function draw(variant) {
+        panel.innerHTML = experimentBox(unit,variant);
+        for (const button of panel.querySelectorAll('[data-variant]')) {
+          button.addEventListener('click',() => {
+            viewedConditions.add(button.dataset.variant);
+            draw(unit.experiment.variants.find(choice => choice.id === button.dataset.variant));
+            refreshActions();
+          });
+          if (button.dataset.variant === variant?.id) button.focus({preventScroll:true});
+        }
+      }
+      draw();
+    }
+
+    function mountTakeaway(panel) {
+      panel.innerHTML = '<section class="stats-takeaway" aria-labelledby="atlas-takeaway">' +
+        '<span class="atlas-lesson-label">记住这个问法</span><h2 id="atlas-takeaway" tabindex="-1">' + safe(unit.thought) + '</h2><p>' +
+        safe(unit.experiment.takeaway) + '</p><p><strong>适用边界</strong> · ' + safe(unit.limit) + '</p></section>';
+    }
+
+    function mountTransfer(panel) {
+      panel.innerHTML = '<section class="stats-quick-section atlas-lesson-transfer" aria-labelledby="stats-transfer">' +
+        '<h2 id="stats-transfer" tabindex="-1">独立迁移</h2><p>先写判断和依据，再对照评分。</p><div id="stats-quick-transfer"></div></section>';
+      panel.querySelector('#stats-quick-transfer').append(Course.exercise(taskId(unit.id),{independent:true}));
+    }
+
+    function mountApplication(panel) {
+      panel.innerHTML = '<section class="stats-life atlas-lesson-practice" aria-labelledby="atlas-application">' +
+        '<h2 id="atlas-application" tabindex="-1">今天就用</h2><p>' + safe(unit.life.prompt) +
+        '</p><details class="atlas-experiment-note"><summary>查看生活应用示例</summary><p>' + safe(unit.life.example) +
+        '</p></details><button type="button" class="soft" id="stats-life-note">记下我的生活应用</button></section>';
+      panel.querySelector('#stats-life-note').addEventListener('click',() => adapter.note(unit.title,url('experience',unit.id)));
+    }
+
+    previous.addEventListener('click',() => showStep(stepIndex - 1));
+    advance.addEventListener('click',() => showStep(stepIndex + 1));
+    showStep(0,false);
   }
   function updateProgress() {
     const section = el.querySelector('#stats-quick-status');
