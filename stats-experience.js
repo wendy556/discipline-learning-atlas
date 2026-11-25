@@ -72,11 +72,13 @@ function createLearningExperience({id,name,lead,units,atlas}) {
   function launcher() {
     const count = recognizedCount(model(),learning());
     return '<section class="stats-section" aria-labelledby="stats-experience-title"><div class="stats-section-header">' +
-      '<div><h2 id="stats-experience-title">快速体验</h2><p>每节只练一种判断，做完就能试着用到今天的生活里。</p></div>' +
-      stageTag('已识别 ' + count + ' / ' + units.length) + '</div><div class="stats-launcher">' +
-      units.map(unit => '<a class="stats-launch-card" href="' + url('experience',unit.id) + '"><div class="stats-launch-card-meta">' +
-        '<span>' + unit.minutes + ' 分钟</span>' + stageTag(progress(unit,model(),learning())) +
-        '</div><h3>' + safe(unit.title) + '</h3><p>' + safe(unit.hook) + '</p></a>').join('') + '</div></section>';
+      '<h2 id="stats-experience-title">课节</h2><span class="atlas-course-count">已识别 ' + count + ' / ' + units.length +
+      '</span></div><ol class="stats-launcher">' + units.map(unit => {
+        const current = progress(unit,model(),learning());
+        return '<li><a class="stats-launch-card" href="' + url('experience',unit.id) + '"><div class="atlas-course-list-copy">' +
+          '<h3>' + safe(unit.title) + '</h3><p>' + safe(unit.hook) + '</p></div><div class="stats-launch-card-meta">' +
+          '<span>' + unit.minutes + ' 分钟</span>' + stageTag(current) + '</div></a></li>';
+      }).join('') + '</ol></section>';
   }
   function dependencyTrail(module, successors) {
     const groups = [
@@ -95,16 +97,14 @@ function createLearningExperience({id,name,lead,units,atlas}) {
     const related = new Set(chosen ? [...chosen.prerequisites,...successors.map(module => module.id)] : []);
     return '<section class="stats-section" aria-labelledby="course-heading"><header class="course-intro stats-section-header"><div>' +
       '<h1 id="course-heading">' + safe(name) + '能力全图</h1><p>' + safe(atlas.scope) + '</p></div>' +
-      stageTag(atlas.modules.length + ' 个能力模块') + '</header><div class="stats-map-layout"><div class="stats-map-grid">' +
+      '<span class="atlas-course-count">' + atlas.modules.length + ' 个能力模块</span></header><div class="stats-map-layout"><div class="stats-map-grid">' +
       atlas.modules.map(module => '<article class="stats-map-card' + (related.has(module.id) ? ' is-related' : '') +
-        (module.id === selected ? ' is-active' : '') + '"><div class="stats-launch-card-meta">' +
+        (module.id === selected ? ' is-active' : '') + '"><h3 class="stats-map-card-title"><a href="' + url('map',module.id) + '"' +
+        (module.id === selected ? ' aria-current="location"' : '') + '>' + safe(module.title) + '</a></h3><div class="stats-launch-card-meta">' +
         stageTag(labels[module.availability]) + (module.experience ? stageTag(progress(byUnit.get(module.experience),model(),learning())) : '') +
-        '</div><h3 class="stats-map-card-title"><a href="' + url('map',module.id) + '"' +
-        (module.id === selected ? ' aria-current="location"' : '') + '>' + safe(module.title) + '</a></h3><p>' + safe(module.question) +
-        '</p><div class="stats-prereqs"><strong>' + (module.prerequisites.length ? '先学' : '起点 · 可直接开始') + '</strong>' +
-        module.prerequisites.map(chip).join('') + '</div></article>').join('') + '</div>' +
-      (chosen ? '<aside class="stats-map-detail" aria-label="模块详情"><h3 id="stats-module-title" tabindex="-1">' + safe(chosen.title) +
-        '</h3><p>' + safe(chosen.question) + '</p>' + dependencyTrail(chosen,successors) + '<dl>' +
+        '</div></article>').join('') + '</div>' +
+      (chosen ? '<aside class="stats-map-detail" aria-label="模块详情"><div class="atlas-map-detail-title"><h2 id="stats-module-title" tabindex="-1">' + safe(chosen.title) +
+        '</h2><p>' + safe(chosen.question) + '</p></div>' + dependencyTrail(chosen,successors) + '<dl>' +
         [['常用方法',chosen.methods],['证据标准',chosen.evidence],['适用边界',chosen.limits],['代表任务',chosen.task],['怎么验收',chosen.assessment]]
           .map(([label,value]) => '<div><dt>' + label + '</dt><dd>' + safe(value) + '</dd></div>').join('') + '</dl>' +
         '<div class="stats-hero-actions">' + (chosen.experience ? '<a class="primary" href="' + url('experience',chosen.experience) + '">进入快速体验</a>' : '') +
@@ -168,10 +168,10 @@ function createLearningExperience({id,name,lead,units,atlas}) {
     const current = unit.question.choices.find(choice => choice.id === selected);
     const good = selected === unit.question.correct;
     return '<section class="stats-quick-section atlas-lesson-prediction" aria-labelledby="stats-predict">' +
-      '<span class="stats-stage">先做判断</span><p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict">' +
+      '<span class="atlas-lesson-label">先做判断</span><p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict">' +
       safe(unit.question.prompt) + '</h2><div class="stats-question-choices" role="group" aria-label="选择你的判断">' +
       unit.question.choices.map(choice => '<button class="stats-option" data-choice="' + safe(choice.id) + '" type="button" aria-pressed="' +
-        (selected === choice.id) + '">' + safe(choice.label) + '</button>').join('') + '</div>' +
+        (selected === choice.id) + '"><span>' + safe(choice.label) + '</span></button>').join('') + '</div>' +
       '<div id="stats-feedback" tabindex="-1" role="status" aria-live="polite"' +
       (current ? ' class="stats-feedback ' + (good ? 'is-correct' : 'is-retry') + '"><strong>' + (good ? '这个判断有依据' : '再试一次') +
         '</strong><p>' + safe(current.feedback) + '</p><span class="stats-stage">第 ' + entries.length + ' 次判断</span>' : ' hidden>') +
@@ -186,17 +186,19 @@ function createLearningExperience({id,name,lead,units,atlas}) {
   function experimentBox(unit) {
     const test = unit.experiment;
     const choice = test.variants.find(v => v.id === selectedExperiments.get(unit.id)) ?? test.variants[0];
+    const metrics = choice.rows.every(row => Number.isFinite(row.value));
+    const comparison = metrics
+      ? '<div class="stats-bars">' + choice.rows.map(row => '<div class="stats-bar"><span>' + safe(row.label) + '</span><strong>' + safe(row.text) +
+        '</strong><div class="stats-meter" aria-hidden="true"><span style="width:' + Math.min(100,Math.max(0,row.value)) + '%"></span></div></div>').join('') + '</div>'
+      : '<dl class="atlas-contrast-list">' + choice.rows.map(row => '<div><dt>' + safe(row.label) + '</dt><dd>' + safe(row.text) + '</dd></div>').join('') + '</dl>';
     return '<section class="stats-quick-section atlas-lesson-contrast" aria-labelledby="stats-compare">' +
-      '<span class="stats-stage">对照实验 · 示意</span><h2 id="stats-compare">' +
+      '<span class="atlas-lesson-label">对照实验 · 示意</span><h2 id="stats-compare">' +
       safe(test.title) + '</h2><p>' + safe(test.description) + '</p><div class="stats-experiment-tabs" role="group" aria-label="切换对照条件">' +
       test.variants.map(variant => '<button type="button" class="soft" data-variant="' + safe(variant.id) + '" aria-pressed="' +
-        (choice.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div><div aria-live="polite"><div class="stats-bars">' +
-      choice.rows.map(row => Number.isFinite(row.value)
-        ? '<div class="stats-bar"><span>' + safe(row.label) + '</span><strong>' + safe(row.text) +
-          '</strong><div class="stats-meter" aria-hidden="true"><span style="width:' + Math.min(100,Math.max(0,row.value)) + '%"></span></div></div>'
-        : '<div class="atlas-contrast"><span class="stats-stage">' + safe(row.label) + '</span><p>' + safe(row.text) + '</p></div>'
-      ).join('') + '</div><p class="stats-experiment-summary">' + safe(choice.summary) + '</p></div><p>' +
-      safe(test.takeaway) + '</p></section>';
+        (choice.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div>' +
+      '<div class="atlas-experiment-reading" aria-live="polite">' + comparison + '<p class="stats-experiment-summary"><strong>结果</strong><span>' +
+      safe(choice.summary) + '</span></p></div><details class="atlas-experiment-note"><summary>怎么解读这个对照</summary><p>' +
+      safe(test.takeaway) + '</p></details></section>';
   }
   function renderQuick(id) {
     const unit = byUnit.get(id) ?? units[0];
@@ -210,7 +212,7 @@ function createLearningExperience({id,name,lead,units,atlas}) {
       '</span><a href="' + url('map',module?.id) + '">对应能力</a></div></header>' +
       '<div class="stats-quick atlas-lesson-grid">' +
       '<div id="stats-question-box"></div><div id="stats-experiment-box"></div>' +
-      '<section class="stats-takeaway"><span class="stats-stage">下次遇到，先问</span><h2>' + safe(unit.thought) + '</h2><p>' +
+      '<section class="stats-takeaway"><span class="atlas-lesson-label">记住这个问法</span><h2>' + safe(unit.thought) + '</h2><p>' +
       '<strong>适用边界</strong> · ' + safe(unit.limit) + '</p></section>' +
       '<div class="atlas-lesson-followup"><section class="stats-quick-section atlas-lesson-transfer" aria-labelledby="stats-transfer">' +
       '<h2 id="stats-transfer">独立迁移</h2><p>先写判断和依据，再对照评分。首次作答通过可记录为能独立迁移。</p>' +

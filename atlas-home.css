@@ -1,198 +1,375 @@
 #page-map {
-  --home-columns: minmax(0, 1fr) minmax(16rem, .49fr);
-  --home-gap: .875rem;
-  --home-edge: #e4e3eb;
+  --home-edge: #dedfd7;
+  --home-ink: #182221;
+  --home-muted: #545b55;
+  --home-accent: #195d50;
+  --home-selected: #e5eee8;
+  color: var(--home-ink);
 }
 
-#page-map .atlas-home-heading {
+.atlas-home-heading {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .7rem 1.5rem;
   flex-wrap: wrap;
-  margin-bottom: .95rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: .625rem 2rem;
+  margin-block: .25rem 1.3rem;
 }
 
-#page-map .atlas-home-heading h1 {
-  font-size: 1.875rem;
+.atlas-home-heading h1 {
+  font-size: clamp(1.65rem, 2.45vw, 2.125rem);
   line-height: 1.22;
-  letter-spacing: -.025em;
+  letter-spacing: -.029em;
 }
 
 #page-map .progress-overview {
   grid-template-columns: auto auto;
-  gap: .28rem .85rem;
-  padding: 0;
+  gap: .38rem 1.3rem;
   min-width: 0;
+  padding: 0;
   border: 0;
   background: none;
 }
 
-#page-map .progress-label { font-size: .8125rem; gap: .42rem; white-space: nowrap; }
-#page-map .progress-overview progress { grid-area: 2 / 1 / 3 / 3; height: .25rem; }
-
-#page-map .atlas-home-courses,
-#page-map .workspace {
-  display: grid;
-  grid-template-columns: var(--home-columns);
-  gap: var(--home-gap);
-}
-
-#page-map :is(.atlas-home-panel, .canvas-panel, .detail) {
-  min-width: 0;
-  border: 1px solid var(--home-edge);
-  border-radius: .8rem;
-  background: #fff;
-}
-
-#page-map .atlas-panel-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: .25rem .8rem;
-  flex-wrap: wrap;
-  padding: .55rem .85rem;
-  min-height: 2.65rem;
-}
-
-#page-map .atlas-panel-heading h2 {
-  font-size: 1.0625rem;
-  line-height: 1.28;
-  font-weight: 680;
-  letter-spacing: -.015em;
-  text-wrap: wrap;
-}
-
-#page-map .atlas-panel-heading a {
+#page-map .progress-label {
+  gap: .42rem;
   font-size: .8125rem;
-  font-weight: 630;
-  text-decoration: none;
+  color: var(--home-muted);
+  white-space: nowrap;
 }
 
-#page-map .atlas-panel-heading a:hover { text-decoration: underline; }
-#page-map .atlas-lessons, #page-map .atlas-home-paths { display: grid; padding-block-end: .2rem; }
+#page-map .progress-overview progress {
+  grid-area: 2 / 1 / 3 / 3;
+  height: .25rem;
+  background: #e1e5dd;
+}
 
-#page-map :is(.atlas-lesson-card, .atlas-home-paths a) {
+#page-map .progress-overview progress::-webkit-progress-bar { background: #e1e5dd; }
+#page-map .progress-overview progress::-webkit-progress-value { background: var(--home-accent); }
+#page-map .progress-overview progress::-moz-progress-bar { background: var(--home-accent); }
+
+.atlas-home-courses {
   display: grid;
-  align-items: center;
+  grid-template-columns: minmax(17rem, .57fr) minmax(0, 1fr);
+  gap: clamp(1.6rem, 3vw, 3rem);
+  align-items: stretch;
+}
+
+.atlas-resume {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: .75rem;
   min-width: 0;
-  min-height: 3.25rem;
-  padding: .42rem .85rem;
-  border: 0;
-  border-top: 1px solid #efedf3;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: var(--ink);
+  padding: 1.15rem clamp(1.2rem, 2.4vw, 2rem);
+  border-radius: 1.05rem;
+  background:
+    radial-gradient(ellipse at 106% 96%, #357a68 0%, transparent 70%),
+    linear-gradient(128deg, #162c29, #21423a 54%, #295c50);
+  color: #fff;
+}
+
+.atlas-resume::before,
+.atlas-resume::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -3rem;
+  bottom: -5.5rem;
+  width: 13rem;
+  height: 18rem;
+  border: 1px solid rgb(202 230 213 / .22);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: rotate(-33deg);
+}
+
+.atlas-resume::after {
+  right: -5rem;
+  bottom: -2.6rem;
+  transform: rotate(26deg);
+}
+
+.atlas-resume h2 {
+  font-size: .9rem;
+  font-weight: 630;
+  letter-spacing: .05em;
+  color: #e0efe5;
+}
+
+.atlas-next-lesson p {
+  color: #d4e3d9;
+  font-size: .82rem;
+  line-height: 1.48;
+}
+
+.atlas-next-lesson #atlas-next-title {
+  max-width: 20em;
+  margin-bottom: .24rem;
+  color: #fff;
+  font-size: clamp(1.15rem, 1.65vw, 1.47rem);
+  font-weight: 630;
+  letter-spacing: -.02em;
+  line-height: 1.44;
+  text-wrap: pretty;
+}
+
+#atlas-start {
+  display: inline-flex;
+  align-items: center;
+  gap: .52rem;
+  min-height: 2.625rem;
+  padding: .38rem .92rem;
+  border: 1px solid rgb(221 243 229 / .43);
+  border-radius: 2rem;
+  background: rgb(239 250 242 / .12);
+  color: #fff;
+  font-size: .875rem;
+  font-weight: 650;
   text-decoration: none;
 }
 
-#page-map :is(.atlas-lesson-card, .atlas-home-paths a):hover { background: #f6f4fc; }
-#page-map :is(.atlas-lesson-card, .atlas-home-paths a):focus-visible { outline-offset: -3px; }
+#atlas-start:hover { background: rgb(239 250 242 / .2); }
+#atlas-start:focus-visible { outline-color: #fff; }
 
-#page-map .atlas-lesson-card {
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: .65rem;
-}
-
-#page-map .atlas-lesson-card.is-next { background: #f8f6ff; }
-#page-map .atlas-lesson-card.is-next:hover { background: #f1edfc; }
-
-#page-map :is(.atlas-lesson-card, .atlas-home-paths a)::after {
+#atlas-start::after,
+.atlas-home-paths a::after,
+.atlas-lesson-card::after {
   content: "";
-  display: block;
+  display: inline-block;
   width: .36rem;
   height: .36rem;
-  margin-inline-end: .12rem;
-  border-top: 1.5px solid #7667a4;
-  border-right: 1.5px solid #7667a4;
+  margin-inline-end: .1rem;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
   transform: rotate(45deg);
 }
 
-#page-map .atlas-lesson-copy { min-width: 0; }
-#page-map :is(.atlas-lesson-card h3, .atlas-home-paths strong) { font-size: .9375rem; line-height: 1.35; letter-spacing: 0; font-weight: 655; text-wrap: wrap; }
-
-#page-map .atlas-home-paths a span {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: .8125rem;
-  line-height: 1.4;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.atlas-home-queue {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-#page-map .atlas-lesson-foot {
+.atlas-home-queue h2,
+.atlas-map-heading h2 {
+  margin: 0;
+  font-size: clamp(1.13rem, 1.66vw, 1.43rem);
+  font-weight: 690;
+  letter-spacing: -.026em;
+  line-height: 1.3;
+  text-align: start;
+  text-wrap: wrap;
+}
+
+.atlas-home-queue h2 { margin-bottom: .6rem; }
+
+#page-map .atlas-lesson-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto .48rem;
+  align-items: center;
+  gap: .65rem;
+  min-width: 0;
+  min-height: 2.86rem;
+  padding: .55rem .65rem .55rem 0;
+  border-bottom: 1px solid var(--home-edge);
+  color: var(--home-ink);
+  text-decoration: none;
+}
+
+#page-map .atlas-lesson-card:first-child { border-top: 1px solid var(--home-edge); }
+#page-map .atlas-lesson-card::after { color: #63766a; }
+#page-map .atlas-lesson-card:hover .atlas-lesson-copy h3 { text-decoration: underline; text-underline-offset: .2em; }
+#page-map .atlas-lesson-card.is-next .atlas-lesson-copy h3,
+#page-map .atlas-lesson-card.is-next::after { color: var(--home-accent); }
+
+.atlas-lesson-copy h3 {
+  font-size: .96rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  line-height: 1.42;
+  text-wrap: wrap;
+}
+
+.atlas-lesson-foot {
   display: flex;
-  gap: .15rem .6rem;
   align-items: baseline;
   justify-content: end;
-  margin: 0;
-  width: auto;
-  padding: 0;
-  color: var(--muted);
-  font-size: .8125rem;
-  font-weight: 590;
+  gap: .75rem;
+  color: var(--home-muted);
+  font-size: .8rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-#page-map .atlas-lesson-status { color: #514174; font-size: inherit; }
-#page-map .atlas-home-paths a { grid-template-columns: minmax(0, 1fr) auto; column-gap: .45rem; }
-#page-map .atlas-home-paths a::after { grid-area: 1 / 2 / 3 / 3; }
+.atlas-lesson-status { color: var(--home-accent); font-size: inherit; }
 
-#page-map .atlas-map-section { margin: .9rem 0 0; }
-#page-map .atlas-map-heading { padding-inline: 0; }
-#page-map .workspace { align-items: start; }
-#page-map .map-toolbar { padding: .42rem .65rem; }
-#page-map .map-toolbar input { padding-block: .34rem; }
-#page-map .map-toolbar button { min-height: 2rem; padding: .27rem .58rem; }
-
-#page-map .graph { min-height: 0; container: atlas-map / inline-size; }
-#page-map .groups {
-  min-height: 0;
-  gap: 2.1rem .55rem;
-  padding: .6rem .65rem;
+.atlas-home-paths {
+  flex-wrap: wrap;
+  gap: .12rem clamp(.6rem, 2vw, 1.3rem);
+  margin-top: .52rem;
 }
 
-#page-map .group { padding: .46rem; border-radius: .6rem; }
-#page-map .group-title { margin-bottom: .29rem; }
-#page-map .node-list { gap: .2rem; }
-#page-map .node { min-height: 1.82rem; padding: .19rem .36rem; border-radius: .4rem; font-size: .8125rem; }
-#page-map .graph-center { min-width: 0; padding: .21rem .55rem; border-radius: .55rem; }
-#page-map .graph-center strong { font-size: .72rem; font-weight: 630; white-space: nowrap; }
-#page-map .map-caption { padding: .36rem .65rem; font-size: .79rem; }
+.atlas-home-paths a {
+  gap: .38rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border-radius: .18rem;
+  color: var(--home-accent);
+  font-size: .83rem;
+  font-weight: 625;
+}
 
-#page-map .detail { padding: .7rem .85rem; }
-#page-map .detail h2 { font-size: 1.25rem; letter-spacing: -.012em; }
-#page-map .detail-question { margin: .24rem 0 .52rem; font-size: .875rem; }
-#page-map .detail .node-course-info { margin-block: .48rem; padding: .55rem .62rem; gap: .25rem; }
-#page-map .detail .node-course-info p, #page-map .detail dd { font-size: .84rem; line-height: 1.48; }
-#page-map .detail dl { margin-block: .58rem; gap: .42rem .7rem; }
-#page-map .detail :is(.connections, .detail-resources) { margin-top: .6rem; padding-top: .55rem; }
-#page-map .source-list { margin-top: .45rem; }
+.atlas-home-paths a::after { width: .29rem; height: .29rem; }
+.atlas-home-paths a:hover { background: none; text-decoration: underline; }
 
-@container atlas-map (min-width: 43rem) {
+#page-map .atlas-map-section { margin: clamp(1.45rem, 2.35vw, 2.1rem) 0 0; }
+.atlas-map-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1.25rem;
+  margin-bottom: .72rem;
+}
+
+#page-map #disciplines-heading { scroll-margin-block-start: 5rem; }
+#page-map .map-toolbar { gap: .55rem; padding: 0; }
+#page-map .map-toolbar input {
+  min-height: 2.38rem;
+  padding-block: .34rem;
+  border-color: #dddfd6;
+  background: #eeefe8;
+  font-size: .83rem;
+}
+
+#page-map .map-toolbar button {
+  min-height: 2.38rem;
+  padding: .35rem .65rem;
+  border-color: #d8e1d8;
+  background: #f8faf7;
+  color: var(--home-accent);
+}
+
+#page-map .map-toolbar button:hover { background: var(--home-selected); }
+#page-map [aria-pressed="true"] .toggle-dot { background: var(--home-accent); }
+
+#page-map .workspace {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, .43fr);
+  gap: clamp(1rem, 2.1vw, 1.8rem);
+}
+
+#page-map :is(.canvas-panel, .detail) {
+  min-width: 0;
+  border: 1px solid var(--home-edge);
+  border-radius: 1rem;
+  background: #fff;
+}
+
+#page-map .graph {
+  min-height: 0;
+  container: atlas-map / inline-size;
+  border-block: 0;
+  background: radial-gradient(ellipse at 51% 49%, #e8eee7 0%, #f4f6f0 69%, #f8f9f5 100%);
+}
+
+#page-map .groups {
+  min-height: 0;
+  gap: 2.1rem .68rem;
+  padding: .72rem .8rem;
+}
+
+#page-map .group {
+  padding: .56rem .54rem .52rem;
+  border-color: #e0e4db;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 38%, #dbe2d8);
+  border-radius: .62rem;
+}
+
+#page-map .group-title {
+  margin: 0 0 .27rem .18rem;
+  color: #394840;
+  font-size: .83rem;
+  font-weight: 690;
+}
+
+#page-map .node-list { gap: .18rem; }
+#page-map .node {
+  min-height: 1.92rem;
+  padding: .21rem .32rem;
+  border-color: transparent;
+  border-radius: .38rem;
+  background: transparent;
+  color: #2b3732;
+  font-size: .81rem;
+  font-weight: 575;
+}
+
+#page-map .node:is(:hover, .selected-link):not([aria-pressed="true"]) {
+  border-color: #d5e3d8;
+  background: #edf3ee;
+}
+
+#page-map .node[aria-pressed="true"] {
+  border-color: var(--home-accent);
+  background: var(--home-accent);
+  color: white;
+}
+
+#page-map .step-dot { border-color: #7c8780; }
+#page-map .node[aria-pressed="true"] .step-dot { border-color: white; }
+
+#page-map .graph-center { min-width: 0; padding: .22rem .56rem; border-color: #d9e1d9; border-radius: 1rem; }
+#page-map .graph-center strong { color: #3f6355; font-size: .74rem; font-weight: 635; white-space: nowrap; }
+#page-map .map-caption { padding: .53rem .8rem; color: var(--home-muted); font-size: .79rem; }
+
+#page-map .detail { padding: .86rem 1rem; scroll-margin-block-start: 6rem; }
+#page-map .detail h2 { font-size: 1.23rem; letter-spacing: -.014em; }
+#page-map .detail-question { margin: .38rem 0 .65rem; color: #364540; font-size: .9rem; }
+
+#page-map .detail .node-course-info {
+  gap: .18rem;
+  margin-block: .58rem;
+  padding: .55rem .67rem;
+  border: 0;
+  border-radius: .56rem;
+  background: #edf3ee;
+}
+
+#page-map .detail .stage-pill { border-color: #dfe8df; background: #e4ece5; color: #295d4c; }
+#page-map .detail .node-course-info p, #page-map .detail dd { font-size: .85rem; line-height: 1.54; }
+#page-map .detail dl { margin-block: .68rem .55rem; gap: .58rem .73rem; }
+#page-map .detail :is(.connections, .detail-resources) { margin-top: .65rem; padding-top: .65rem; }
+#page-map .detail .connection-set .text-button { background: #edf3ee; color: var(--home-accent); }
+#page-map .source-list { margin-top: .6rem; }
+
+@container atlas-map (min-width: 42rem) {
   #page-map .node-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 58rem) {
-  #page-map .workspace { grid-template-columns: 1fr; }
+  #page-map .workspace { grid-template-columns: minmax(0, 1fr); }
 }
 
-@media (max-width: 43rem) {
-  #page-map .atlas-home-courses { grid-template-columns: 1fr; }
-  #page-map .atlas-home-heading h1 { font-size: 1.6rem; }
-  #page-map .atlas-home-paths { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  #page-map .atlas-home-paths a { column-gap: 0; grid-template-columns: minmax(0, 1fr); }
-  #page-map .atlas-home-paths a::after { display: none; }
-  #page-map .atlas-home-paths a span { white-space: normal; }
-  #page-map .atlas-home-paths a + a { border-inline-start: 1px solid #efedf3; }
+@media (max-width: 44rem) {
+  .atlas-home-heading { margin-bottom: 1.15rem; }
+  .atlas-home-courses { grid-template-columns: minmax(0, 1fr); }
+  .atlas-resume { gap: .54rem; }
+  .atlas-resume::before, .atlas-resume::after { right: -2rem; }
+  .atlas-resume::after { right: -4rem; }
 }
 
 @media (max-width: 34rem) {
-  #page-map .atlas-lesson-card { gap: .42rem; }
-  #page-map .atlas-lesson-foot { display: grid; justify-items: end; font-size: .76rem; }
-  #page-map .atlas-home-paths a { padding-inline: .55rem; }
-  #page-map .groups { gap: .5rem; padding: .55rem; grid-template-rows: auto auto auto; }
-  #page-map .node { min-height: 2.15rem; }
+  #page-map .progress-label { font-size: .76rem; }
+  #page-map .progress-overview { gap: .27rem .7rem; }
+  #page-map .atlas-lesson-card { min-height: 3rem; gap: .36rem; padding-inline-end: .2rem; }
+  .atlas-lesson-foot { display: grid; justify-items: end; gap: .05rem; font-size: .74rem; }
+  .atlas-map-heading { align-items: flex-start; flex-direction: column; }
+  #page-map .map-toolbar { width: 100%; }
+  #page-map .groups { gap: .56rem; padding: .54rem; }
+  #page-map .node { min-height: 2.32rem; }
 }

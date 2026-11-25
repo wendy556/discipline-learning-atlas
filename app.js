@@ -140,6 +140,8 @@ function renderPhilosophyHome() {
   const quick = state.philosophyQuick;
   const next = PhilosophyExperience.suggested(quick,state.learning);
   const startLink = byId('atlas-start');
+  byId('atlas-next-title').textContent = next.title;
+  byId('atlas-next-time').textContent = next.minutes + ' 分钟';
   startLink.href = PhilosophyExperience.url('experience',next.id);
   startLink.textContent = PhilosophyExperience.hasStarted(quick) ? '继续学哲学' : '开始哲学第一课';
   byId('atlas-philosophy-lessons').innerHTML = experienceUnits.philosophy.map(unit => {
@@ -240,22 +242,22 @@ function drawGraph() {
   const center = [box.width / 2, box.height / 2];
   document.querySelectorAll('.group:not(.no-results)').forEach(group => {
     const top = group.getBoundingClientRect().top - box.top < center[1];
-    link(midpoint(group, top ? 'bottom' : 'top'), center, '#acb9cf', 1.2, true);
+    link(midpoint(group, top ? 'bottom' : 'top'), center, '#b4c1b6', 1.1, true);
   });
   if (!showCurrentNode) return;
   const selected = nodes.get(state.active);
   const start = midpoint(selected);
   for (const connection of linkedTo(state.active)) {
     const other = nodes.get(connection.id);
-    if (!other.hidden) link(start, midpoint(other), '#5185d2', 1.75, false);
+    if (!other.hidden) link(start, midpoint(other), '#548473', 1.6, false);
   }
 }
 function renderRoute() {
   const section = byId('route-content');
   const next = PhilosophyExperience.suggested(state.philosophyQuick,state.learning);
-  section.innerHTML = '<div class="route-course-list"><article class="card route-course"><h2>哲学</h2><p>下一课 · ' + escapeHTML(next.title) + ' · ' + next.minutes + ' 分钟</p>' +
+  section.innerHTML = '<div class="route-course-list"><article class="route-course"><h2>哲学</h2><p>下一课 · ' + escapeHTML(next.title) + ' · ' + next.minutes + ' 分钟</p>' +
     '<div class="course-links"><a class="primary" href="' + PhilosophyExperience.url('experience',next.id) + '">打开课节</a><a class="soft" href="#course/philosophy/map">能力全图</a></div></article>' +
-    '<article class="card route-course"><h2>统计与因果推断</h2><p>三节体验 · 看分母、找混杂、用不确定性做决定</p>' +
+    '<article class="route-course"><h2>统计与因果推断</h2><p>三节体验 · 看分母、找混杂、用不确定性做决定</p>' +
     '<div class="course-links"><a class="soft" href="#course/stats/overview">课程目录</a><a class="soft" href="#course/stats/map">能力全图</a></div></article></div>' +
     '<details class="stats-scope"><summary>统计进阶 · 企鹅数据项目和原有课程</summary><div class="roadmap-grid">' + data.roadmap.map((item, i) =>
     '<article class="card' + (i === 0 ? ' highlight' : '') + '"><h3>' + escapeHTML(item.title) + '</h3><p class="timing">' + escapeHTML(item.timing) + '</p><p>' + escapeHTML(item.description) + '</p><ul>' + item.items.map(text => '<li>' + escapeHTML(text) + '</li>').join('') + '</ul>' +
