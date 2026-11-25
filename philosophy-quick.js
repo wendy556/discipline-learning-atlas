@@ -6,6 +6,19 @@ window.PHILOSOPHY_QUICK = [
     title: '把「会怎样」和「该怎样」分开',
     minutes: 6,
     hook: '邻里群有人提议周末把通知默认设为静音。他说，静音能减少打断，所以所有人都应该从静音开始。',
+    visuals: {
+      scenario: {file: 'weekend-notifications.webp', alt: '摊开的书旁，手机屏幕上出现了群消息提醒。'},
+      contrast: [
+        {variant: 'quiet-first', label: '少受打扰', focus: 'book'},
+        {variant: 'timely-first', label: '及时看到消息', focus: 'phone'}
+      ],
+      argument: [
+        {label: '事实', text: '默认静音能减少打断'},
+        {label: '价值前提', text: '减少打断更值得优先考虑'},
+        {label: '行动判断', text: '因此支持默认静音'}
+      ],
+      transfer: {file: 'reading-club-prize.webp', alt: '三位读书会成员围桌交谈，桌上摊着书，旁边有一只小奖杯。'}
+    },
     question: {
       prompt: '要从「静音能减少打断」推出「群通知应该默认静音」，哪句话补上了关键的价值判断？',
       choices: [

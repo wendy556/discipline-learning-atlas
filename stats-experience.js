@@ -160,13 +160,21 @@ function createLearningExperience({id,name,lead,units,atlas}) {
     el.querySelector('#stats-benchmark-exercise').append(Course.exercise(benchmarkId(kind),{independent:true}));
   }
 
+  function illustration(asset) {
+    return '<img src="./illustrations/' + safe(asset.file) + '" alt="' + safe(asset.alt) + '" width="960" height="640" decoding="async">';
+  }
+
   function questionBox(unit, attempt, historyOpen) {
     const entries = model().choices[unit.id] || [];
     const current = unit.question.choices.find(choice => choice.id === attempt?.choice);
     const good = current?.id === unit.question.correct;
+    const question = '<p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict" tabindex="-1">' +
+      safe(unit.question.prompt) + '</h2>';
+    const scene = unit.visuals?.scenario;
+    const prompt = scene ? '<div class="atlas-illustrated-question"><div class="atlas-illustrated-prompt">' + question +
+      '</div><figure class="atlas-lesson-figure">' + illustration(scene) + '</figure></div>' : question;
     return '<section class="stats-quick-section atlas-lesson-prediction" aria-labelledby="stats-predict">' +
-      '<p class="atlas-lesson-scenario">' + safe(unit.hook) + '</p><h2 id="stats-predict" tabindex="-1">' +
-      safe(unit.question.prompt) + '</h2><form class="atlas-answer-form" autocomplete="off" aria-labelledby="stats-predict">' +
+      prompt + '<form class="atlas-answer-form" autocomplete="off" aria-labelledby="stats-predict">' +
       '<div class="stats-question-choices" role="group" aria-label="选择你的判断">' +
       unit.question.choices.map(choice => '<label class="stats-option"><input name="lesson-answer" type="radio" value="' + safe(choice.id) + '"' +
         (current?.id === choice.id ? ' checked' : '') + (current ? ' disabled' : '') + '><span>' + safe(choice.label) + '</span></label>').join('') + '</div>' +
@@ -181,19 +189,33 @@ function createLearningExperience({id,name,lead,units,atlas}) {
             ' · ' + (item.choice === unit.question.correct ? '识别了' : '待复练') + '</small></li>';
         }).join('') + '</ol></details>' : '') + '</section>';
   }
+
+  function illustratedContrast(visuals, choice) {
+    const priority = visuals.contrast.find(item => item.variant === choice?.id);
+    return '<div class="atlas-contrast-board atlas-contrast-illustrated" id="atlas-contrast-reading">' +
+      '<figure class="atlas-lesson-figure atlas-contrast-scene">' + illustration(visuals.scenario) +
+      (priority ? '<span class="atlas-scene-focus" data-focus="' + safe(priority.focus) + '" aria-hidden="true"></span>' : '') + '</figure>' +
+      visuals.contrast.map(item => '<div class="atlas-contrast-interest' + (item === priority ? ' is-priority' : '') + '"><strong>' +
+        safe(item.label) + '</strong>' + (item === priority ? '<span class="atlas-priority-marker">当前优先</span>' : '') + '</div>').join('') +
+      '<div class="atlas-contrast-branch" role="status">' + (choice ? '<strong>对默认设置的判断</strong><p>' + safe(choice.summary) +
+        '</p>' : '<p>选一个优先项，看看默认设置会怎么定。</p>') + '</div></div>';
+  }
+
   function experimentBox(unit, choice) {
     const test = unit.experiment;
     const comparison = !choice ? '' : choice.rows.every(row => Number.isFinite(row.value))
       ? '<div class="stats-bars">' + choice.rows.map(row => '<div class="stats-bar"><span>' + safe(row.label) + '</span><strong>' + safe(row.text) +
         '</strong><div class="stats-meter" aria-hidden="true"><span style="width:' + Math.min(100,Math.max(0,row.value)) + '%"></span></div></div>').join('') + '</div>'
       : '<dl class="atlas-contrast-list">' + choice.rows.map(row => '<div><dt>' + safe(row.label) + '</dt><dd>' + safe(row.text) + '</dd></div>').join('') + '</dl>';
+    const result = unit.visuals?.contrast ? illustratedContrast(unit.visuals,choice) :
+      (choice ? '<div class="atlas-experiment-reading" aria-live="polite">' + comparison + '<p class="stats-experiment-summary"><strong>结果</strong><span>' +
+        safe(choice.summary) + '</span></p></div>' : '<p class="atlas-experiment-prompt">选一个条件查看结果。</p>');
     return '<section class="stats-quick-section atlas-lesson-contrast" aria-labelledby="stats-compare">' +
       '<span class="atlas-lesson-label">对照实验 · 示意</span><h2 id="stats-compare" tabindex="-1">' +
       safe(test.title) + '</h2><p>' + safe(test.description) + '</p><div class="stats-experiment-tabs" role="group" aria-label="切换对照条件">' +
       test.variants.map(variant => '<button type="button" class="soft" data-variant="' + safe(variant.id) + '" aria-pressed="' +
         (choice?.id === variant.id) + '">' + safe(variant.label) + '</button>').join('') + '</div>' +
-      (choice ? '<div class="atlas-experiment-reading" aria-live="polite">' + comparison + '<p class="stats-experiment-summary"><strong>结果</strong><span>' +
-        safe(choice.summary) + '</span></p></div>' : '<p class="atlas-experiment-prompt">选一个条件查看结果。</p>') + '</section>';
+      result + '</section>';
   }
   function renderQuick(id) {
     const unit = byUnit.get(id) ?? units[0];
@@ -314,14 +336,22 @@ function createLearningExperience({id,name,lead,units,atlas}) {
     }
 
     function mountTakeaway(panel) {
+      const argument = unit.visuals?.argument;
       panel.innerHTML = '<section class="stats-takeaway" aria-labelledby="atlas-takeaway">' +
         '<span class="atlas-lesson-label">记住这个问法</span><h2 id="atlas-takeaway" tabindex="-1">' + safe(unit.thought) + '</h2><p>' +
-        safe(unit.experiment.takeaway) + '</p><p><strong>适用边界</strong> · ' + safe(unit.limit) + '</p></section>';
+        safe(unit.experiment.takeaway) + '</p>' +
+        (argument ? '<figure class="atlas-argument-figure"><figcaption>以优先保留安静时间为例</figcaption><ol class="atlas-argument-path" role="list">' +
+          argument.map(item => '<li><span>' + safe(item.label) + '</span><strong>' + safe(item.text) + '</strong></li>').join('') + '</ol></figure>' : '') +
+        '<p><strong>适用边界</strong> · ' + safe(unit.limit) + '</p></section>';
     }
 
     function mountTransfer(panel) {
+      const art = unit.visuals?.transfer;
+      const exercise = '<div id="stats-quick-transfer"></div>';
       panel.innerHTML = '<section class="stats-quick-section atlas-lesson-transfer" aria-labelledby="stats-transfer">' +
-        '<h2 id="stats-transfer" tabindex="-1">独立迁移</h2><p>先写判断和依据，再对照评分。</p><div id="stats-quick-transfer"></div></section>';
+        '<h2 id="stats-transfer" tabindex="-1">独立迁移</h2><p>先写判断和依据，再对照评分。</p>' +
+        (art ? '<div class="atlas-illustrated-transfer"><figure class="atlas-lesson-figure">' + illustration(art) +
+          '</figure>' + exercise + '</div>' : exercise) + '</section>';
       panel.querySelector('#stats-quick-transfer').append(Course.exercise(taskId(unit.id),{independent:true}));
     }
 
